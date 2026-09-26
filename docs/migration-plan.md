@@ -1,10 +1,10 @@
-# Migração para Python e MCP — plano e etapas 1–6
+# Migração para Python e MCP — registro das oito etapas
 
 ## Estado
 
-Etapas 1–6 concluídas em 26/09/2026. As etapas 7–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O código Python contém núcleo, transportes, configuração, provedores de credenciais, migração, CLI e servidor MCP real via stdio com SDK oficial. Não há pacote publicado no PyPI. Os números nas seções de cada etapa são evidências históricas daquela entrega.
+As oito etapas da sequência aceita foram entregues em 26/09/2026, incluindo a documentação da etapa 8. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O Python contém núcleo, transportes, configuração, provedores de credenciais, migrador, CLI, servidor MCP stdio, pacotes, Docker e binários. Os números nas seções de cada etapa são evidências históricas daquela entrega. Conclusão das etapas não significa publicação no PyPI, migração operacional ou homologação nos aplicativos/cofres reais; essas pendências estão discriminadas abaixo.
 
-O alvo é Python 3.11+. A execução local foi verificada em Windows com Python 3.14.3. Usar somente funções da biblioteca padrão no núcleo evita dependências de WinSCP, DPAPI e comandos de sistema, mas não comprova por si só execução em Linux/macOS; essa verificação pertence à matriz de testes futura.
+O alvo é Python 3.11+. A etapa 7 comprovou execução em Windows, Linux e macOS com Python 3.11 e 3.14, além das verificações de distribuição e Docker. A execução local também foi verificada em Windows/Python 3.14.3. [Matriz e artefatos](distribution.md).
 
 ## Etapa 1: contrato do núcleo
 
@@ -117,6 +117,28 @@ O CI executa a suíte de 467 testes com Python 3.11 e 3.14 em Windows, Linux e m
 
 O primeiro ciclo completo ficou verde nos sete jobs: [execução 36275937220](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36275937220). A versão final do empacotamento preserva permissões/links de Linux/macOS em TAR.GZ e mantém ZIP no Windows. Resultados finais, arquiteturas, cobertura e acesso aos artefatos estão no [guia de distribuição](distribution.md). Nenhum código de produção da CLI, MCP ou transportes precisou ser alterado nesta etapa.
 
+## Etapa 8: documentação e configurações de clientes
+
+README reescrito com instalação Python como entrada principal e instruções anteriores preservadas em [legado Windows](legacy-windows.md). Acrescentados [instalação](install.md), [migração da skill](migration-from-codex-skill.md), [configuração de clientes MCP](mcp-clients.md) e [recuperação](recovery.md). Seis exemplos separados em JSON/YAML/TOML atendem aos formatos documentados de Claude Desktop, Cursor, Zed, VS Code, Continue e Codex, com fontes oficiais consultadas em 26/09/2026.
+
+Validação desta etapa: seis exemplos parseados, argumentos de inicialização conferidos contra a CLI instalada, links relativos verificados e processo stdio iniciado com os argumentos do exemplo pelo cliente oficial do SDK. O teste descobriu as sete ferramentas, listou somente um cadastro fictício desativado e confirmou erro para catálogo vazio. Não leu senhas, não conectou a hospedagens nem gravou estado operacional. A revisão corrigiu a hipótese incorreta de que `{}` seria aceito como catálogo e os avisos antigos de matriz ainda pendente.
+
+Nenhum código de produção, script legado ou instalação de cliente foi modificado. Não foram repetidos os testes de migração nem executada migração de produção: a lógica e sua validação pertencem às etapas 3–4. O CI de código da etapa 7 permanece como evidência; as verificações adicionais desta etapa são de documentação/configuração, não homologação dentro dos aplicativos.
+
+## Pendências além da entrega documental
+
+| Item | Estado real |
+|---|---|
+| Execução Linux/macOS/Windows | Comprovada pela matriz da etapa 7 |
+| Integração MCP no protocolo stdio | Comprovada com cliente oficial do SDK e processos instalados/congelados |
+| Claude Desktop, Cursor, Zed, VS Code, Continue e Codex | Exemplos documentados; homologação dentro de cada aplicativo pendente |
+| Keyring nativo em cada SO | Seleção/comportamento testados com simulação; cofres reais pendentes |
+| WSL e outras versões/arquiteturas | Não executados |
+| Publicação no PyPI e em registro de contêineres | Não realizada; instalação disponível por fonte/wheel e build Docker |
+| Licença de redistribuição do projeto | Não definida pelo autor; não foi inventada uma licença |
+| Migração da instalação operacional | Não realizada; documentação pronta, conversão isolada já testada |
+| Senhas DPAPI | Recadastro necessário, sem exportação/descriptografia automática |
+
 ## Sequência aceita
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.
@@ -126,6 +148,6 @@ O primeiro ciclo completo ficou verde nos sete jobs: [execução 36275937220](ht
 5. **MCP e token de prévia — concluída.** SDK oficial com stdio, sete ferramentas e token emitido por prévia sem bloqueios, vinculado ao hash, válido por 5 minutos e obrigatório no deploy Python/MCP. Consumo único entre processos; prévia alterada bloqueia o envio. Confirmação explícita e `publish_enabled` continuam necessários. Evidências e limites acima.
 6. **Testes ampliados — concluída.** Suíte de 467 testes, 94,77% de cobertura local, com evidências de concorrência, backup, interrupção, recuperação, credenciais, CLI/MCP e tokens. Limites de ambiente e recuperação documentados acima; sem alterações no código de produção nesta etapa.
 7. **Empacotamento e CI — concluído.** Pyproject, Docker, pip/pipx e binários implementados. [CI final 36276055669](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36276055669) verde nos sete jobs: três sistemas, Python 3.11/3.14 e Docker. 467 testes por ambiente, cobertura entre 94,77% e 95,09%, verificações adicionais do pacote e binários. Três artefatos disponíveis; nenhum SO pendente e nenhuma issue de falha necessária. Não publicado no PyPI; limites no guia de distribuição.
-8. **Documentação.** README honesto, configuração MCP para os clientes e **somente documentação da migração**, cuja implementação e execução de teste já pertencem à etapa 3. Registrar plataformas comprovadas, limitações, requisitos de credenciais e recuperação de falha parcial. Não repetir ou executar a migração de produção nesta etapa.
+8. **Documentação — concluída.** README, instalação, legado preservado, seis exemplos MCP, migração documentada e roteiro de recuperação. Sintaxe, argumentos, links e inicialização/listagem stdio conferidos. Limites e pendências explícitos acima. Nenhuma migração de produção nem configuração de aplicativo executada nesta etapa.
 
 Cada etapa depende dos testes pertinentes passando. O repositório público deve conter apenas código, documentação e exemplos fictícios; cadastros reais, credenciais, logs e backups continuam excluídos.

@@ -1,117 +1,117 @@
-# Sites via SFTP/FTPS — skill Codex, CLI Python e servidor MCP
+# SFTP/FTPS para sites — CLI Python e servidor MCP
 
-Ferramentas para consultar, comparar, copiar e publicar arquivos de sites hospedados na Locaweb usando um **domínio completo** como identificador. O transporte também atende outros provedores SFTP/FTPS que cumpram os requisitos documentados. O texto `/mcplocaweb/dominio.com.br` é uma convenção da skill, não um comando de barra nativo. O **servidor MCP real** é um processo Python separado, documentado em [setup MCP](docs/mcp-setup.md).
+Gerencie arquivos de sites pelo **domínio completo cadastrado**: compare versões, gere uma prévia, faça backup e envie alterações verificadas. A implementação Python oferece CLI e servidor MCP local via **stdio**, com SFTP/FTPS, identidade do servidor validada, credenciais separadas da configuração e publicação desativada por padrão.
 
-O projeto inclui uma skill Codex (`SKILL.md`) e dois scripts PowerShell (`scripts/`). A skill interpreta o pedido; o wrapper traduz a ação para o backend; o backend usa a biblioteca .NET do WinSCP para acessar o servidor. Cada domínio é cadastrado localmente com uma pasta de origem e uma raiz remota. A senha fica criptografada pelo DPAPI do Windows, fora deste repositório.
+Versão de desenvolvimento: **0.1.0a1**. O projeto atende a Locaweb e pode operar outros servidores compatíveis com os requisitos documentados; não administra painel de revenda, DNS, e-mail ou bancos de dados. Não há FTP sem criptografia na implementação Python.
 
-## Migração para Python: etapas 1–7
+A skill e os scripts PowerShell anteriores permanecem disponíveis, com suas dependências Windows/WinSCP/DPAPI: [guia legado](docs/legacy-windows.md). Instalar o Python não substitui essa skill automaticamente.
 
-O fluxo PowerShell descrito abaixo continua exigindo Windows. A implementação Python já tem comparação por SHA-256, SFTP/FTPS com identidade validada, configuração YAML, cofres de credenciais, migração de cadastros, CLI e servidor MCP via **stdio**, usando o SDK oficial. CLI e MCP compartilham prévia com token, backup verificado antes de substituições, confirmação de publicação e registro de falhas parciais. Ainda não há pacote publicado no PyPI.
+## Começar
 
-**Instalando do zero?** Na cópia do repositório, execute `pipx install .` (ou `python -m pip install .` em um ambiente virtual) e depois `mcp-locaweb-sftp configurar`. O assistente pergunta domínio, protocolo, servidor, porta, usuário e pastas. A senha é digitada somente em prompt local oculto e guardada no cofre escolhido. Não depende do FileZilla. Cada site começa com publicação desativada; o cadastro não testa conexão nem envia arquivos. [Instalação, Docker e binários](docs/distribution.md) · [Guia da CLI](docs/cli.md).
+Requer Python 3.11+ e Git. Com pipx já instalado:
 
-Validação automatizada em **Windows, Linux e macOS, com Python 3.11 e 3.14**: 467 testes por ambiente e cobertura acima de 94%. O empacotamento também verifica instalação por pip/pipx, CLI/MCP instalados e binários nativos, com prévia, backup e envio em servidores SFTP/FTPS locais. Docker passa por testes de CLI, usuário não-root e MCP stdio. [Resultados e artefatos do CI](docs/distribution.md).
-
-Inclui disputa de token entre processos, envio concorrente, encerramento abrupto durante escrita, retomada com conflito, cancelamento MCP, age real e cofre do sistema simulado. Não comprova integração executada com Claude/Cursor/Zed/Codex nem segurança integral. Nenhuma conta real foi acessada. A migração preserva a origem, desativa publicação e exige recadastro das senhas DPAPI: [configuração e credenciais](docs/configuration-credentials.md). [Testes e recuperação](docs/testing.md) · [Etapa restante de documentação](docs/migration-plan.md).
-
-No Python, o envio exige `publish_enabled` global e por site, hash da prévia, **token válido por cinco minutos e de uso único**, além de confirmação explícita. O token é obrigatório tanto na CLI quanto no MCP; não prova consentimento humano por si só. As substituições podem deixar arquivos parciais em caso de falha; não há rollback automático nem exclusão remota. FTPS exige confirmação administrativa adicional de confinamento e ausência de escritores concorrentes. [Fluxo e recuperação](docs/cli.md) · [Limites dos transportes](docs/backends.md).
-
-[Decisões, testes e plano das oito etapas](docs/migration-plan.md). Os scripts PowerShell continuam disponíveis durante a transição.
-
-## Requisitos
-
-- Windows com Windows PowerShell 5.1;
-- WinSCP instalado com `WinSCP.exe` e `WinSCPnet.dll` no mesmo diretório;
-- uma conta SFTP com acesso ao site;
-- um diretório local completo e identificado para cada site;
-- servidor com suporte a checksum SHA-256 para a comparação e a verificação de envios.
-
-O fluxo foi desenvolvido e testado com SFTP. O backend também aceita FTPS e FTP, mas esses protocolos exigem avaliação específica do ambiente; prefira SFTP. FTP sem criptografia só é permitido se o cadastro o habilitar explicitamente.
-
-## Instalação
-
-Clone o repositório na pasta de skills do Codex. Por exemplo, no PowerShell:
-
-```powershell
-git clone https://github.com/herlonventura/codex-locaweb-sftp-skill.git "$env:USERPROFILE\.codex\skills\mcplocaweb"
-Set-Location "$env:USERPROFILE\.codex\skills\mcplocaweb"
-Copy-Item .\config\sites.example.json .\config\sites.json
-Copy-Item .\config\settings.example.json .\config\settings.json
+```sh
+git clone https://github.com/herlonventura/codex-locaweb-sftp-skill.git
+cd codex-locaweb-sftp-skill
+pipx install .
+mcp-locaweb-sftp configurar
 ```
 
-Edite `config/settings.json` para apontar `winscpDirectory` ao diretório real do WinSCP. Edite `config/sites.json` com os domínios, hosts, usuários e caminhos **do seu ambiente**. Os arquivos reais de configuração são ignorados pelo Git; não remova essas regras. Reinicie o Codex se a skill não aparecer imediatamente na lista.
+O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e provedor da senha. Não depende de FileZilla. A senha é digitada em prompt oculto no terminal quando se usa keyring/age; nunca no chat, no YAML ou em argumento. Sem fingerprint SFTP confirmada ou cofre disponível, o cadastro permanece pendente. O assistente não conecta nem envia arquivos.
 
-O exemplo contém valores fictícios. Substitua todos antes de conectar. O nome da propriedade de topo em `sites.json` deve ser o domínio completo; `localRoot` é a pasta a enviar, e `remoteRoot` é a pasta remota correspondente. Não inclua senha no JSON.
+**Não há publicação no PyPI:** use o repositório ou o wheel dos artefatos; `pipx install mcp-locaweb-sftp` sem um caminho não é o procedimento desta entrega.
 
-### Credencial e chave SSH
+- [Instalação por venv/pip e primeiro cadastro](docs/install.md)
+- [pipx, Docker, binários e resultados do CI](docs/distribution.md)
+- [Configuração MCP: Claude Desktop, Cursor, Zed, VS Code, Continue e Codex](docs/mcp-clients.md)
+- [Migração da skill antiga: metadados, sem exportar senhas DPAPI](docs/migration-from-codex-skill.md)
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\locaweb.ps1 credential exemplo.com.br
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\locaweb.ps1 scan-key exemplo.com.br
+## O que foi comprovado
+
+[CI da etapa 7](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36276055669): **sete jobs verdes**, Windows X64/Linux X64/macOS ARM64 com Python 3.11 e 3.14, mais Docker. Foram **467 testes por ambiente**, com cobertura de instruções e ramos entre **94,77% e 95,09%**. Testes adicionais verificaram pip/pipx, comandos instalados e binários PyInstaller, com prévia CLI, envio MCP, backup e rejeição de token reutilizado contra SFTP/FTPS locais.
+
+| Item | Evidência e limite |
+|---|---|
+| CLI e MCP stdio | Cliente oficial do SDK, processos reais e servidores locais SFTP/FTPS |
+| Windows, Linux e macOS | Matriz executada; outras versões/arquiteturas e WSL não foram testados |
+| Credenciais age | Criptografia real com identidades temporárias |
+| Cofres nativos | Comportamento simulado; integração real com cada cofre ainda não homologada |
+| Aplicativos de IA | Exemplos documentados; não homologados dentro dos aplicativos |
+| Docker | Build, usuário não-root, CLI, age e MCP stdio; sem deploy a hospedagem real |
+| Falhas e recuperação | Concorrência, processo interrompido, registro parcial, backup preservado e retomada com conflito |
+| Instalação operacional | Não migrada nem modificada por esses testes |
+
+[Detalhes dos testes](docs/testing.md) · [Matriz de distribuição](docs/distribution.md) · [Registro das oito etapas e pendências](docs/migration-plan.md).
+
+## Usar a CLI
+
+```sh
+mcp-locaweb-sftp list
+mcp-locaweb-sftp info exemplo.com.br
+mcp-locaweb-sftp test exemplo.com.br
+mcp-locaweb-sftp compare exemplo.com.br
+mcp-locaweb-sftp backup exemplo.com.br
+mcp-locaweb-sftp preview exemplo.com.br
 ```
 
-`credential` pede a senha sem a exibir e a salva por DPAPI em `%LOCALAPPDATA%\Codex-Locaweb-SFTP\credentials`. Essa credencial só pode ser decifrada pelo mesmo usuário Windows. `scan-key` mostra a chave SSH observada, mas **não a confia automaticamente**: confira a impressão digital com o provedor por um canal independente e então coloque a chave confirmada em `sites.json` ou use:
+`list` e `info` leem configuração local; as demais ações acima acessam o servidor. Execute somente a ação pretendida para o domínio correto. Aliases: `listar`, `configurar`, `testar`, `comparar`, `previa`, `enviar` e `migrar`. [Opções, códigos de saída e fluxo completo](docs/cli.md).
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\locaweb.ps1 set-key exemplo.com.br -SshHostKeyFingerprint 'ssh-ed25519 256 SHA256:CHAVE_CONFIRMADA'
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\locaweb.ps1 test exemplo.com.br
-```
+Cada cadastro fixa pasta local e raiz remota. Por padrão, configuração e estado ficam em `~/.mcp-locaweb-sftp`. Use `--sites`, `--settings` e `--state-dir` antes do subcomando para caminhos próprios. Não coloque essas pastas dentro da publicação ou do Git.
 
-Se o domínio ainda não estiver no JSON, é possível cadastrá-lo com `register`; veja `help` para os parâmetros. O cadastro criado assim não contém senha e fica pendente da chave SSH confirmada.
-
-## Como usar no Codex
-
-Selecione `$mcplocaweb` ou escreva, por exemplo:
+Para enviar, é necessário habilitar conscientemente `publish_enabled` no site **e** nas configurações globais, gerar a prévia e revisar o plano. Somente depois da autorização:
 
 ```text
-/mcplocaweb/exemplo.com.br
-/mcplocaweb/exemplo.com.br testar
-/mcplocaweb/exemplo.com.br backup
-/mcplocaweb/exemplo.com.br comparar
-/mcplocaweb/exemplo.com.br previa de envio
-/mcplocaweb/exemplo.com.br enviar arquivos atualizados
+mcp-locaweb-sftp deploy exemplo.com.br --preview-hash HASH_DA_PREVIA --preview-token TOKEN_DA_PREVIA --confirm
 ```
 
-O comando sem ação apenas consulta o cadastro. Pedidos claros em linguagem natural, como “envie os arquivos atualizados para o servidor”, também podem acionar o envio quando um único domínio estiver selecionado. Uma pergunta como “como envio?” não aciona publicação. A skill usa sempre o domínio completo cadastrado, sem adivinhar nomes parecidos.
+Os marcadores devem ser substituídos pelo resultado da prévia; não são valores utilizáveis. O token vale **cinco minutos**, é vinculado ao domínio/plano e tem uso único. Não o publique em Git/logs/scripts. Mudança no plano bloqueia o envio. Token e `confirm` não provam consentimento humano: o cliente continua responsável por respeitar a autorização do usuário.
 
-Para executar diretamente no terminal:
+## Usar com uma IA
 
-```powershell
-& .\scripts\mcplocaweb.ps1 '/mcplocaweb/exemplo.com.br previa de envio'
+O cliente inicia **`mcp-locaweb-sftp-mcp`** e se comunica pelo stdin/stdout. Não existe porta HTTP/SSE nem configuração universal para todos os aplicativos. Os [exemplos por cliente](docs/mcp-clients.md) usam caminhos absolutos e não contêm senhas.
+
+| Ferramenta | Operação |
+|---|---|
+| `list_sites` | Lista metadados locais |
+| `test_connection` | Autentica e confere a raiz remota |
+| `compare_site` | Compara conteúdo e datas |
+| `preview_deploy` | Gera plano, hash e token quando não há bloqueios |
+| `backup_site` | Baixa arquivos e verifica hashes |
+| `deploy_site` | Envia a prévia autorizada com hash, token e confirmação |
+| `register_site` | Cria cadastro novo desativado, sem senha nem confiança de identidade |
+
+O formato operacional é `{status, data, messages}`, com `success`, `conflict`, `partial` ou `error`. A IA deve apresentar a prévia, preservar as aprovações do cliente e examinar falhas antes de tentar novamente. O MCP não recebe senha nem permite habilitar publicação/confiança pelo cadastro. [Contrato MCP](docs/mcp-setup.md).
+
+`/mcplocaweb/dominio.com.br` é uma convenção da skill legada, não um comando de barra universal fornecido pelo servidor MCP.
+
+## Proteções e limites
+
+- Fingerprint SSH confirmada antes de autenticar; FTPS valida TLS no controle e nos dados. Não há aceitação automática de chave ou modo TLS inseguro.
+- Segredos ficam no provedor explicitamente escolhido: keyring, age ou ambiente, sem fallback automático. Ambiente é texto em memória; não é criptografia.
+- Arquivos bloqueados incluem `.env`, chaves, `wp-config.php`, `.git` e backups. Regras adicionais não retiram bloqueios mínimos. Isso não detecta todos os segredos embutidos em HTML/JS.
+- Arquivo diferente com data remota igual/mais recente, incluindo tolerância de dois segundos, bloqueia o lote. Não existe `--force` para ignorar conflitos.
+- Todos os originais a substituir são copiados/verificados antes do primeiro upload. Cada envio é lido novamente para conferir SHA-256. Arquivos só remotos são preservados; não há exclusão remota.
+- A publicação escreve no arquivo ativo, sem transação por site ou rollback automático. Leitores podem observar conteúdo parcial; travas locais não bloqueiam outras máquinas/aplicações. FTPS exige condições administrativas adicionais.
+- Backup cobre arquivos, não banco de dados, permissões ou snapshot simultâneo. Em `partial`, timeout ou interrupção, siga [recuperação](docs/recovery.md); repetir o comando não equivale a restaurar.
+- No Windows, arquivos privados herdam ACLs, que esta ferramenta não configura/audita. Proteja cadastros, chaves, snapshots, recibos, backups e logs. Não sincronize o estado de autorização entre máquinas.
+
+[Configuração e credenciais](docs/configuration-credentials.md) · [Limites dos transportes](docs/backends.md).
+
+## Desenvolvimento
+
+Em um venv, instale `requirements-dev.txt`. A suíte usa servidores em loopback, credenciais fictícias e pastas temporárias:
+
+```sh
+python -m pip install -r requirements-dev.txt
+python -m pytest -q --ignore=tests/test_distribution.py --cov=mcp_locaweb_sftp --cov-branch --cov-fail-under=81
 ```
 
-Se a política de execução do PowerShell bloquear o wrapper, use `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\mcplocaweb.ps1 '/mcplocaweb/exemplo.com.br previa de envio'`.
+Para os testes criptográficos, instale age/age-keygen ou configure `MCP_LOCAWEB_TEST_AGE`; sem eles, há skips. Os testes de distribuição precisam dos comandos empacotados e rodam separadamente pelo procedimento em [distribuição](docs/distribution.md). Não execute testes contra cadastros reais.
 
-## Publicação: etapas e limites
+A documentação da etapa 8 não executou migração de produção nem configurou aplicativos locais. PyPI, homologação dentro dos aplicativos, cofres nativos reais e definição de licença permanecem pendentes; não confunda a conclusão das oito etapas com essas validações adicionais.
 
-1. `comparar` usa checksum no servidor para identificar arquivos iguais, alterados, novos apenas no computador e novos apenas no servidor.
-2. Se um arquivo diferente no servidor tiver data igual ou mais recente que a cópia local (com tolerância de dois segundos), ele é considerado conflito e o envio é bloqueado.
-3. A prévia lista o que seria enviado e quais caminhos sensíveis foram bloqueados. O script impede o envio de `.env`, chaves, backups, `wp-config.php` e outros nomes configurados em `Test-PublishablePath`.
-4. `enviar arquivos atualizados` só funciona quando `publishEnabled` em `config/settings.json` estiver `true`. Antes do primeiro upload, os arquivos remotos que seriam substituídos são copiados localmente e seus hashes conferidos.
-5. O script confere se os arquivos remotos não mudaram desde a comparação, envia somente os novos ou diferentes e verifica o SHA-256 remoto após cada envio.
-6. Arquivos que só existem no servidor permanecem lá. **Nenhuma exclusão remota é feita.** Se ocorrer falha depois de parte dos uploads, `deploy-result.json` registra o que já foi enviado; examine o resultado antes de tentar novamente.
+## Dados privados e licença
 
-Os backups e downloads ficam em `backups/` e `sites/`; registros operacionais sem senha ficam em `logs/`. Essas pastas são ignoradas pelo Git, mas podem conter conteúdo privado do site e devem ser protegidas no computador. Não trate a comparação e o backup como substitutos de um processo completo de homologação ou recuperação de desastre.
+Revise o diff antes de publicar: nunca inclua cadastros reais, credenciais, `.dpapi`, `.age`, identidades, recibos de token, exportações FileZilla, conteúdo de clientes, logs ou backups. `.gitignore` é uma ajuda, não garantia contra vazamentos.
 
-Para habilitar publicação, altere `publishEnabled` para `true` **somente depois** de testar conexão, pasta local, raiz remota, comparação e backup do domínio. Uma publicação é uma alteração real no servidor.
-
-## Segurança e dados não publicados
-
-O repositório contém somente código, documentação e configurações fictícias. Não inclua `config/sites.json`, `config/settings.json`, arquivos `.dpapi`, backups, downloads, logs, exportações do FileZilla, senhas, tokens ou conteúdo de sites em commits. O `.gitignore` ajuda, mas não substitui a revisão de `git diff --cached` antes do envio.
-
-O script não extrai senhas do FileZilla. Cadastre a credencial pelo prompt seguro `credential`. A impressão digital SSH deve ser verificada de forma independente; aceitar a chave observada sem conferência deixa a conexão vulnerável a um servidor impostor.
-
-## Verificação local
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\locaweb.ps1 help
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\locaweb.ps1 list
-```
-
-`help` não conecta ao servidor; `list` lê apenas o catálogo local. Testes com conexão e publicação só devem usar um domínio que você administra. O backend retorna JSON para que o Codex possa relatar sucesso, conflito e falha parcial com precisão.
-
-Há também um teste local com servidor simulado, sem conexão à hospedagem. Ele usa a biblioteca WinSCP instalada e um diretório temporário para verificar backup anterior, envio de dois arquivos, conferência de hashes, ausência de exclusões e bloqueio quando o remoto muda:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\test-deploy-local.ps1
-```
+O autor ainda não definiu uma licença de redistribuição para este repositório. Torná-lo público não substitui essa definição; as dependências mantêm suas próprias licenças.

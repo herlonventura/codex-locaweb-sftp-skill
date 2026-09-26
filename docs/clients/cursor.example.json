@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "locawebSftp": {
+      "command": "/CAMINHO/ABSOLUTO/mcp-locaweb-sftp-mcp",
+      "args": [
+        "--sites",
+        "/CAMINHO/PRIVADO/sites.yaml",
+        "--settings",
+        "/CAMINHO/PRIVADO/settings.yaml",
+        "--state-dir",
+        "/CAMINHO/PRIVADO/state"
+      ]
+    }
+  }
+}

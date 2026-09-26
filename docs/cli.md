@@ -113,6 +113,8 @@ Uma interrupção forçada pode deixar a trava local. Confirme que não há proc
 - Backup cobre arquivos, não banco de dados, permissões, horários originais ou diretórios vazios. Não equivale a backup integral da hospedagem nem a snapshot transacional.
 - Backups, snapshots, configurações e logs são privados. No POSIX, novos arquivos usam 0600 e diretórios 0700. No Windows herdam ACLs; esta versão não as cria/audita. Pastas já existentes devem ter permissões adequadas.
 - Nomes bloqueados não detectam todos os segredos embutidos em arquivos HTML/JS. Revise o conteúdo antes de habilitar publicação.
-- Não houve operação em hospedagem real. Cofres nativos foram simulados; age e os servidores locais SFTP/FTPS foram executados de fato. A matriz de outros sistemas ainda está pendente.
+- Não houve operação em hospedagem real. Cofres nativos foram simulados; age e os servidores locais SFTP/FTPS foram executados de fato. A matriz Windows/Linux/macOS passou na etapa 7: [evidências](distribution.md).
+
+Guias complementares: [migração do legado](migration-from-codex-skill.md) e [recuperação de uma operação interrompida](recovery.md).
 
 Referência da CLI: [Click — comandos e grupos](https://click.palletsprojects.com/en/stable/commands-and-groups/).

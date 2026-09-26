@@ -76,6 +76,8 @@ O retorno é a conexão de baixo nível. Isso **não é autorização de deploy*
 
 ## Migração implementada e testada
 
+Para os comandos da CLI, preparação do destino e recadastro das senhas, siga o [guia de migração](migration-from-codex-skill.md). Abaixo está o contrato da implementação; os números históricos desta etapa não substituem a [matriz atual](distribution.md).
+
 `migrate_legacy(source, destination, local_roots=...)` recebe a raiz da skill antiga e uma pasta de destino nova, fora da origem. Lê somente `config/sites.json` e `config/settings.json`. Não varre outras pastas, abre sessões de rede, acessa FileZilla, lê `.dpapi` ou altera a instalação anterior.
 
 A função:

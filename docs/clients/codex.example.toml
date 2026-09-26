@@ -1,0 +1,7 @@
+# Mescle este bloco ao config.toml existente; substitua os caminhos.
+[mcp_servers.locawebSftp]
+command = "/CAMINHO/ABSOLUTO/mcp-locaweb-sftp-mcp"
+args = ["--sites", "/CAMINHO/PRIVADO/sites.yaml", "--settings", "/CAMINHO/PRIVADO/settings.yaml", "--state-dir", "/CAMINHO/PRIVADO/state"]
+startup_timeout_sec = 30
+tool_timeout_sec = 600
+default_tools_approval_mode = "prompt"

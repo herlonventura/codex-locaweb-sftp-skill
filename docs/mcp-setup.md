@@ -1,8 +1,8 @@
-# MCP real via stdio — etapa 5
+# MCP real via stdio — contrato das ferramentas
 
 O projeto expõe um servidor MCP usando o SDK Python oficial **mcp 2.2.0**, testado com seu cliente oficial. Funciona por stdin/stdout do processo local; não abre porta HTTP, não instala extensão e não modifica as configurações de nenhum aplicativo automaticamente. O nome da biblioteca é `mcp`, não o pacote independente `fastmcp`.
 
-A integração executada nesta etapa foi cliente oficial → processo stdio → servidores SFTP e FTPS em loopback, com credenciais fictícias. Não foi executada dentro de Claude Desktop, Cursor, Zed ou Codex, nem em hospedagem real. Configurações específicas desses clientes pertencem à documentação da etapa 8; os resultados da matriz Linux/macOS/Windows e os comandos instaláveis estão em [distribuição](distribution.md).
+A integração executada foi cliente oficial → processo stdio → servidores SFTP e FTPS em loopback, com credenciais fictícias. Não foi executada dentro dos aplicativos de IA nem em hospedagem real. A etapa 8 documenta os [exemplos por cliente](mcp-clients.md); resultados da matriz Linux/macOS/Windows e comandos instaláveis estão em [distribuição](distribution.md).
 
 ## Preparar e iniciar
 
