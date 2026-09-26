@@ -4,6 +4,12 @@ Uma skill para consultar, comparar, copiar e publicar arquivos de sites hospedad
 
 O projeto inclui uma skill Codex (`SKILL.md`) e dois scripts PowerShell (`scripts/`). A skill interpreta o pedido; o wrapper traduz a ação para o backend; o backend usa a biblioteca .NET do WinSCP para acessar o servidor. Cada domínio é cadastrado localmente com uma pasta de origem e uma raiz remota. A senha fica criptografada pelo DPAPI do Windows, fora deste repositório.
 
+## Migração para Python: etapa 1
+
+O fluxo operacional descrito abaixo continua exigindo Windows. O novo núcleo em `src/mcp_locaweb_sftp/core/` compara inventários em memória, calcula SHA-256, identifica domínios cadastrados e bloqueia caminhos perigosos. Ele usa somente a biblioteca padrão do Python e ainda não faz conexões, acessa credenciais ou oferece CLI/servidor MCP. A validação executada nesta etapa é local, em Windows com Python 3.14.3; compatibilidade executada em outros sistemas continua pendente.
+
+[Decisões, testes e plano das oito etapas](docs/migration-plan.md). Os scripts PowerShell continuam disponíveis durante a transição.
+
 ## Requisitos
 
 - Windows com Windows PowerShell 5.1;

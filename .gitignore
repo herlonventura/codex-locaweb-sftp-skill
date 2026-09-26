@@ -21,3 +21,14 @@ logs/
 *.rar
 .DS_Store
 Thumbs.db
+
+# Desenvolvimento Python; configurações e resultados privados
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage*
+htmlcov/
+coverage.xml
+config/sites.yaml
+config/settings.yaml
