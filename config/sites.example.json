@@ -1,0 +1,12 @@
+{
+  "exemplo.com.br": {
+    "protocol": "sftp",
+    "host": "sftp.exemplo.net",
+    "port": 22,
+    "username": "usuario_sftp",
+    "remoteRoot": "/home/usuario_sftp/public_html",
+    "localRoot": "C:\\Sites\\exemplo.com.br\\public_html",
+    "sshHostKeyFingerprint": "ssh-ed25519 256 SHA256:SUBSTITUA_PELA_CHAVE_CONFIRMADA",
+    "allowPlainFtp": false
+  }
+}

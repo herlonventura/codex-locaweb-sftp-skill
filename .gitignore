@@ -1,0 +1,23 @@
+# Dados de cada instalação: nunca publicar
+config/sites.json
+config/settings.json
+backups/
+sites/
+logs/
+*.dpapi
+*.key
+*.pem
+*.pfx
+*.p12
+*.env
+.env.*
+*.log
+*.bak
+*.backup
+*.tmp
+*.temp
+*.zip
+*.7z
+*.rar
+.DS_Store
+Thumbs.db

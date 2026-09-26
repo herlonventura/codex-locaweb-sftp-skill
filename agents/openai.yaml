@@ -1,0 +1,4 @@
+interface:
+  display_name: "Locaweb SFTP - sites"
+  short_description: "Comparar, copiar e publicar sites por domínio"
+  default_prompt: "Use $mcplocaweb para consultar um domínio cadastrado."
