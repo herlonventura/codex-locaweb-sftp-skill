@@ -49,3 +49,9 @@ backup-manifest.json
 /state/
 preview-tokens/
 receipts.sqlite3*
+
+# Distribution and isolated installation checks
+/build/
+/dist/
+*.egg-info/
+*.spec

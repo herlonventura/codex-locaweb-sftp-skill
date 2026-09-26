@@ -1,0 +1,9 @@
+**
+!Dockerfile
+!pyproject.toml
+!requirements.txt
+!README.md
+!src/
+!src/mcp_locaweb_sftp/
+!src/mcp_locaweb_sftp/**/
+!src/mcp_locaweb_sftp/**/*.py

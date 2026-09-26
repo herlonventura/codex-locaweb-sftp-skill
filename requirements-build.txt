@@ -1,0 +1,4 @@
+build>=1.2,<2
+twine>=6,<7
+pyinstaller>=6.19,<7
+pipx>=1.7,<2

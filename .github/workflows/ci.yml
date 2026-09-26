@@ -1,0 +1,75 @@
+name: Python distribution
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '*.md']
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ['3.11', '3.14']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install testing and build tools
+        run: python -m pip install -r requirements-dev.txt -r requirements-build.txt
+      - name: Install pinned age for real encrypted-vault tests
+        run: python packaging/install_test_age.py
+      - name: Full tests and coverage gate
+        run: python -m pytest -q --ignore=tests/test_distribution.py --cov=mcp_locaweb_sftp --cov-branch --cov-report=term-missing --cov-report=xml --cov-fail-under=81
+      - name: Build wheel and source archive; check content
+        run: |
+          python -m build
+          python packaging/check_archives.py
+          python -m twine check dist/*
+      - name: Install wheel and verify CLI/MCP with local servers
+        run: python packaging/check_install.py
+      - name: Build native binaries
+        if: matrix.python == '3.11'
+        run: python packaging/build_binaries.py
+      - name: Verify frozen CLI and MCP with local servers
+        if: matrix.python == '3.11'
+        run: python packaging/check_install.py --frozen
+      - name: Archive native distribution
+        if: matrix.python == '3.11'
+        run: python -c "import shutil; shutil.make_archive('dist/native-${{ runner.os }}-${{ runner.arch }}', 'zip', 'dist/bin')"
+      - uses: actions/upload-artifact@v4
+        if: matrix.python == '3.11'
+        with:
+          name: distribution-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/native-*.zip
+          if-no-files-found: error
+          retention-days: 14
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements.txt
+      - run: docker build -t mcp-locaweb-sftp:test .
+      - name: Verify non-root container and CLI
+        run: |
+          test "$(docker run --rm --entrypoint id mcp-locaweb-sftp:test -u)" = "10001"
+          docker run --rm --entrypoint mcp-locaweb-sftp mcp-locaweb-sftp:test --help
+          docker run --rm --entrypoint age mcp-locaweb-sftp:test --version
+      - name: Verify MCP over container stdio
+        run: python packaging/smoke.py docker run --rm -i mcp-locaweb-sftp:test

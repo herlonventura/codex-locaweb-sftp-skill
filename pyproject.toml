@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling>=1.26,<2", "hatch-requirements-txt>=0.4,<1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-locaweb-sftp"
+version = "0.1.0a1"
+description = "SFTP/FTPS CLI and MCP stdio server with verified backups and preview tokens"
+readme = "README.md"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+
+[project.urls]
+Repository = "https://github.com/herlonventura/codex-locaweb-sftp-skill"
+Issues = "https://github.com/herlonventura/codex-locaweb-sftp-skill/issues"
+
+[project.scripts]
+mcp-locaweb-sftp = "mcp_locaweb_sftp.cli:cli"
+mcp-locaweb-sftp-mcp = "mcp_locaweb_sftp.mcp_server:main"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
+
+[tool.hatch.build.targets.wheel]
+core-metadata-version = "2.4"
+packages = ["src/mcp_locaweb_sftp"]
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
+include = ["/src/mcp_locaweb_sftp/**/*.py", "/pyproject.toml", "/requirements.txt", "/README.md"]
