@@ -4,9 +4,12 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vhe-deploy"
-version = "0.1.0a1"
+version = "0.1.0a2"
 description = "VHE Deploy: SFTP/FTPS CLI and MCP server with verified backups and preview tokens"
+keywords = ["sftp", "ftps", "mcp", "mcp-server", "deployment", "backup", "cli"]
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dynamic = ["dependencies"]
 classifiers = [
@@ -16,8 +19,8 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/herlonventura/codex-locaweb-sftp-skill"
-Issues = "https://github.com/herlonventura/codex-locaweb-sftp-skill/issues"
+Repository = "https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp"
+Issues = "https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/issues"
 
 [project.scripts]
 vhe-deploy = "vhe_deploy.cli:cli"
@@ -32,4 +35,4 @@ packages = ["src/vhe_deploy"]
 
 [tool.hatch.build.targets.sdist]
 core-metadata-version = "2.4"
-include = ["/src/vhe_deploy/**/*.py", "/pyproject.toml", "/requirements.txt", "/README.md"]
+include = ["/src/vhe_deploy/**/*.py", "/pyproject.toml", "/requirements.txt", "/README.md", "/LICENSE"]

@@ -21,6 +21,9 @@ def check():
         assert expected <= files, "Missing Python source in wheel"
         for name in files - expected:
             parts = PurePosixPath(name).parts
+            if len(parts) == 3 and parts[0].endswith(".dist-info") and parts[1:] == ("licenses", "LICENSE"):
+                assert archive.read(name) == (ROOT / "LICENSE").read_bytes()
+                continue
             assert len(parts) == 2 and parts[0].endswith(".dist-info") and parts[1] in {
                 "METADATA", "WHEEL", "RECORD", "entry_points.txt"}, f"Unexpected wheel member: {name}"
     with tarfile.open(sources[0]) as archive:
@@ -29,7 +32,7 @@ def check():
             assert member.isfile() or member.isdir(), "Source archive contains link or special file"
             if member.isfile():
                 files.add("/".join(PurePosixPath(member.name).parts[1:]))
-        expected = source_files | {"pyproject.toml", "requirements.txt", "README.md", "PKG-INFO", ".gitignore"}
+        expected = source_files | {"pyproject.toml", "requirements.txt", "README.md", "LICENSE", "PKG-INFO", ".gitignore"}
         assert files == expected, f"Unexpected or missing source members: {files ^ expected}"
     print("Wheel and source archive contain only allowed package files and metadata.")
 

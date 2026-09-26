@@ -40,7 +40,7 @@ class KeyringStore:
                 raise ValueError("Missing.")
             return decode_secret(key, payload.encode("utf-8"))
         except Exception:
-            raise CredentialError("Cannot read this credential from the native keyring.") from None
+            raise CredentialError("Não foi possível ler esta credencial no cofre nativo do VHE Deploy. Confira o acesso ao cofre e cadastre a senha com vhe-deploy credential DOMINIO. Senhas salvas em outro programa não são importadas automaticamente.") from None
 
     def set(self, key: CredentialKey, value: SecretStr) -> None:
         payload = encode_secret(key, value)

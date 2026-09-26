@@ -1,14 +1,14 @@
 # Instalar e cadastrar o primeiro site
 
-Escolha a implementação Python para uma instalação nova. Ela não depende do FileZilla, WinSCP ou de senhas já existentes no computador. Requer Python 3.11+ para pip/pipx; os [binários nativos](distribution.md) incluem o interpretador. A versão `0.1.0a1` é de desenvolvimento e não está no PyPI.
+Escolha a implementação Python para uma instalação nova. Ela não depende do FileZilla, WinSCP ou de senhas já existentes no computador. Requer Python 3.11+ para pip/pipx; os [binários nativos](distribution.md) incluem o interpretador. A versão `0.1.0a2` é de desenvolvimento e não está no PyPI.
 
 ## Instalação local
 
 Em um terminal com Git e Python:
 
 ```sh
-git clone https://github.com/herlonventura/codex-locaweb-sftp-skill.git
-cd codex-locaweb-sftp-skill
+git clone https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp.git
+cd vhe-deploy-sftp-ftps-mcp
 python -m venv .venv
 ```
 
@@ -67,3 +67,7 @@ Por padrão, os arquivos ficam em `~/.vhe-deploy/sites.yaml` e `settings.yaml`, 
 Publicação começa desativada. Só habilite `publish_enabled: true` no cadastro do site **e** em `settings.yaml` quando tiver revisado pasta de origem, raiz remota, identidade do servidor e conteúdo publicável. FTPS também exige a declaração administrativa documentada na [CLI](cli.md#publicar-uma-prévia-revisada). Não habilite por um pedido genérico de instalação.
 
 Para usar com uma IA, prossiga para [configuração por cliente](mcp-clients.md). Para publicação, leia o fluxo completo de prévia/token na [CLI](cli.md). Para quem já tem a skill antiga, use o [guia de migração](migration-from-codex-skill.md).
+
+Para baixar bundles portáteis sem instalar Python, consulte [releases e checksums](releases.md).
+
+`test DOMINIO` usa uma senha já cadastrada **neste VHE Deploy**. Senhas salvas no FileZilla ou na instalação antiga não contam como cadastro. Use `credential DOMINIO` primeiro; digite e confirme a senha no prompt oculto do terminal.

@@ -116,6 +116,7 @@ def credential(runtime, domain):
     if store.kind == "env":
         emit(response("success", {"environment_variable": key.env_name}, ["Injete a senha pelo cofre do ambiente; não a passe por argumento."]))
         return
+    click.echo("Cadastre a senha no cofre deste VHE Deploy. Senhas do FileZilla ou da instalação antiga não são importadas automaticamente.", err=True)
     value = click.prompt("Senha", hide_input=True, confirmation_prompt=True, err=True)
     store.set(key, SecretStr(value))
     emit(response("success", {"domain": domain}, ["Credencial cadastrada; valor omitido."]))
@@ -179,7 +180,8 @@ def setup(runtime):
     else:
         try:
             store = selected_store(site, settings)
-            if click.confirm("Cadastrar a senha agora?", default=True, err=True):
+            click.echo("O VHE Deploy usa seu próprio cadastro no cofre. Ter a senha salva em outro programa não conclui este cadastro.", err=True)
+            if click.confirm("Cadastrar a senha no cofre deste VHE Deploy agora?", default=True, err=True):
                 value = click.prompt("Senha", hide_input=True, confirmation_prompt=True, err=True)
                 store.set(CredentialKey.for_site(domain, site), SecretStr(value))
                 data["credential_status"] = "stored"

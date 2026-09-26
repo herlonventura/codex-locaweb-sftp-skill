@@ -4,7 +4,7 @@ Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `vhe-deploy` e 
 
 ## Evidência do VHE Deploy — 26/09/2026
 
-**Sete jobs aprovados** no [CI 36278483565](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36278483565), commit `eccc7f8aa47f092c36aa0c6411ab3e1021081869`: seis combinações de SO/Python e um job Docker. A suíte principal passou com **496 testes em cada combinação**, incluindo a retenção automática, já com a marca e os comandos VHE Deploy. Os testes da distribuição rodam separadamente para não mascarar o uso dos comandos instalados/congelados com importação das fontes.
+**Sete jobs aprovados** no [CI 36278483565](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/actions/runs/36278483565), commit `eccc7f8aa47f092c36aa0c6411ab3e1021081869`: seis combinações de SO/Python e um job Docker. A suíte principal passou com **496 testes em cada combinação**, incluindo a retenção automática, já com a marca e os comandos VHE Deploy. Os testes da distribuição rodam separadamente para não mascarar o uso dos comandos instalados/congelados com importação das fontes.
 
 | Plataforma do runner | Python 3.11 | Python 3.14 | Binário validado |
 |---|---|---|---|
@@ -14,7 +14,7 @@ Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `vhe-deploy` e 
 
 Em cada ambiente houve instalação por pip e pipx e teste MCP stdio. Dois cenários adicionais verificaram a distribuição instalada contra SFTP e FTPS locais; os mesmos dois cenários foram repetidos com os binários em cada SO. O job Docker passou nas verificações descritas adiante. Windows local/Python 3.14.3 também passou no pacote instalado com os novos comandos; os binários desta marca foram validados pelo CI. Os avisos em Python 3.11 referem-se a APIs legadas usadas pelo servidor FTPS de teste, não a falhas da suíte.
 
-Os artefatos **distribution-Windows-X64**, **distribution-Linux-X64** e **distribution-macOS-ARM64** estão na [execução atual](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36278483565), contendo wheel `vhe_deploy`, fonte e bundle nativo com os dois novos comandos. O download dos artefatos do GitHub pode exigir login. Os três sistemas passaram; não foi necessário abrir issue para plataforma pendente. WSL e outras arquiteturas/versões de SO não foram testados. As interfaces dos aplicativos MCP continuam sem homologação; a descoberta no Codex App Server foi validada separadamente. Nenhum segredo real, cadastro de cliente ou conta de hospedagem foi usado.
+Os artefatos **distribution-Windows-X64**, **distribution-Linux-X64** e **distribution-macOS-ARM64** estão na [execução atual](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/actions/runs/36278483565), contendo wheel `vhe_deploy`, fonte e bundle nativo com os dois novos comandos. O download dos artefatos do GitHub pode exigir login. Os três sistemas passaram; não foi necessário abrir issue para plataforma pendente. WSL e outras arquiteturas/versões de SO não foram testados. As interfaces dos aplicativos MCP continuam sem homologação; a descoberta no Codex App Server foi validada separadamente. Nenhum segredo real, cadastro de cliente ou conta de hospedagem foi usado.
 
 ## pip e pipx
 
@@ -48,7 +48,7 @@ O CI compila com PyInstaller **no próprio sistema de destino**. O arquivo `nati
 
 O binário inclui o Python e as bibliotecas Python, mas não inclui cadastros, credenciais ou o executável externo `age`. Para usar esse provedor, instale `age` e configure seu caminho conforme [credenciais](configuration-credentials.md). Cofre nativo requer serviços e permissões do SO. O CI usa cofres simulados; uma [validação posterior do pacote instalado no Windows](validation-windows-codex.md) usou o cofre real com credencial fictícia. Isso não comprova o cofre dos binários nem a disponibilidade em outras máquinas.
 
-Os executáveis são de desenvolvimento, sem assinatura Authenticode ou notarização Apple. O artefato corresponde ao runner/arquitetura identificados pelo CI; não promete compatibilidade com versões antigas do SO, outras arquiteturas ou toda distribuição Linux. Os arquivos ficam nos artefatos de uma execução bem-sucedida por 14 dias; não são uma release permanente.
+Os executáveis são de desenvolvimento, sem assinatura Authenticode ou notarização Apple. O artefato corresponde ao runner/arquitetura identificados pelo CI; não promete compatibilidade com versões antigas do SO, outras arquiteturas ou toda distribuição Linux. Os artefatos de CI ficam disponíveis por 14 dias. Os pacotes selecionados para uma versão pública também são publicados em [Releases](releases.md), com checksums e identificação do commit.
 
 ## Docker
 
@@ -90,4 +90,4 @@ O wheel é reconstruído a partir do sdist. A conferência permite somente fonte
 
 O workflow tenta Windows, Linux e macOS, com Python 3.11 e 3.14. A suíte exige cobertura combinada mínima de 81%; binários são gerados em Python 3.11. Só publica artefatos do job depois dos testes correspondentes passarem. Não envia pacotes ao PyPI, imagens a registros ou arquivos a hospedagens. O teste PowerShell legado depende do WinSCP e não integra esta matriz Python.
 
-O repositório ainda não declara uma licença de redistribuição própria; a publicação pública e o empacotamento não substituem essa definição pelo autor. Licenças das dependências permanecem aplicáveis.
+O código do projeto usa a [licença MIT](../LICENSE). Licenças das dependências permanecem aplicáveis.

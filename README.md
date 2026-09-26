@@ -1,10 +1,14 @@
-# VHE Deploy — CLI e servidor MCP para SFTP/FTPS
+# VHE Deploy — SFTP/FTPS deployment CLI & MCP server
+
+[English](README.en.md) · [Downloads](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/releases) · [Licença MIT](LICENSE)
+
+Deploy website files with an AI assistant or CLI: preview changes, create verified backups, and transfer files over SFTP/FTPS using Model Context Protocol (MCP).
 
 Comandos oficiais: **`vhe-deploy`** e **`vhe-deploy-mcp`**. A marca identifica a ferramenta, sem limitar o provedor de hospedagem. [Mudança de nome e configuração](docs/vhe-deploy.md).
 
 Gerencie arquivos de sites pelo **domínio completo cadastrado**: compare versões, gere uma prévia, faça backup e envie alterações verificadas. A implementação Python oferece CLI e servidor MCP local via **stdio**, com SFTP/FTPS, identidade do servidor validada, credenciais separadas da configuração e publicação desativada por padrão.
 
-Versão de desenvolvimento: **0.1.0a1**. Gerencie sites em provedores com SFTP/FTPS compatíveis com os requisitos documentados; não administra painel de revenda, DNS, e-mail ou bancos de dados. Não há FTP sem criptografia na implementação Python.
+Pré-versão: **0.1.0a2**. [Pacotes portáteis e checksums](docs/releases.md). Gerencie sites em provedores com SFTP/FTPS compatíveis com os requisitos documentados; não administra painel de revenda, DNS, e-mail ou bancos de dados. Não há FTP sem criptografia na implementação Python.
 
 A skill e os scripts PowerShell anteriores permanecem disponíveis, com suas dependências Windows/WinSCP/DPAPI: [guia legado](docs/legacy-windows.md). Instalar o Python não substitui essa skill automaticamente.
 
@@ -13,8 +17,8 @@ A skill e os scripts PowerShell anteriores permanecem disponíveis, com suas dep
 Requer Python 3.11+ e Git. Com pipx já instalado:
 
 ```sh
-git clone https://github.com/herlonventura/codex-locaweb-sftp-skill.git
-cd codex-locaweb-sftp-skill
+git clone https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp.git
+cd vhe-deploy-sftp-ftps-mcp
 pipx install .
 vhe-deploy configurar
 ```
@@ -30,7 +34,7 @@ O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e p
 
 ## O que foi comprovado
 
-[CI do VHE Deploy](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36278483565): **sete jobs verdes**, Windows X64/Linux X64/macOS ARM64 com Python 3.11 e 3.14, mais Docker. Foram **496 testes por ambiente**, com cobertura de instruções e ramos entre **94,94% e 95,23%**. Testes adicionais verificaram pip/pipx, os novos comandos e binários PyInstaller, com prévia CLI, envio MCP, backup e rejeição de token reutilizado contra SFTP/FTPS locais.
+[CI do VHE Deploy](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/actions/runs/36278483565): **sete jobs verdes**, Windows X64/Linux X64/macOS ARM64 com Python 3.11 e 3.14, mais Docker. Foram **496 testes por ambiente**, com cobertura de instruções e ramos entre **94,94% e 95,23%**. Testes adicionais verificaram pip/pipx, os novos comandos e binários PyInstaller, com prévia CLI, envio MCP, backup e rejeição de token reutilizado contra SFTP/FTPS locais.
 
 | Item | Evidência e limite |
 |---|---|
@@ -41,7 +45,7 @@ O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e p
 | Aplicativos de IA | Codex App Server reconheceu as sete ferramentas; interfaces e aprovações ainda não homologadas |
 | Docker | Build, usuário não-root, CLI, age e MCP stdio; sem deploy a hospedagem real |
 | Falhas e recuperação | Concorrência, processo interrompido, registro parcial, backup preservado e retomada com conflito |
-| Instalação operacional | Não migrada nem modificada por esses testes |
+| Ensaio operacional posterior | Envio, download e restauração em SFTP real com hashes e backups conferidos; [limites](docs/releases.md#verificação-operacional-adicional) |
 
 [Detalhes dos testes](docs/testing.md) · [Matriz de distribuição](docs/distribution.md) · [Registro das oito etapas e pendências](docs/migration-plan.md).
 
@@ -112,10 +116,10 @@ python -m pytest -q --ignore=tests/test_distribution.py --cov=vhe_deploy --cov-b
 
 Para os testes criptográficos, instale age/age-keygen ou configure `VHE_DEPLOY_TEST_AGE`; sem eles, há skips. Os testes de distribuição precisam dos comandos empacotados e rodam separadamente pelo procedimento em [distribuição](docs/distribution.md). Não execute testes contra cadastros reais.
 
-A documentação da etapa 8 não executou migração de produção nem configurou aplicativos locais. A validação adicional cobriu o cofre real Windows e a descoberta no Codex App Server. PyPI, homologação das interfaces dos aplicativos, cofres reais Linux/macOS e definição de licença permanecem pendentes; não confunda a conclusão das oito etapas com essas validações adicionais.
+A documentação da etapa 8 não executou migração de produção nem configurou aplicativos locais. A validação adicional cobriu o cofre real Windows e a descoberta no Codex App Server. PyPI, homologação das interfaces dos aplicativos, cofres reais Linux/macOS permanecem pendentes; não confunda a conclusão das oito etapas com essas validações adicionais.
 
 ## Dados privados e licença
 
 Revise o diff antes de publicar: nunca inclua cadastros reais, credenciais, `.dpapi`, `.age`, identidades, recibos de token, exportações FileZilla, conteúdo de clientes, logs ou backups. `.gitignore` é uma ajuda, não garantia contra vazamentos.
 
-O autor ainda não definiu uma licença de redistribuição para este repositório. Torná-lo público não substitui essa definição; as dependências mantêm suas próprias licenças.
+Licenciado sob a [MIT](LICENSE), copyright 2026 Herlon Ventura. Uso, modificação e redistribuição são permitidos conforme seus termos. As dependências mantêm suas próprias licenças.

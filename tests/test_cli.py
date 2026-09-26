@@ -139,6 +139,23 @@ def test_hidden_credential_prompt_does_not_print_password(cli_environment, monke
     assert json.loads(result.stdout)["status"] == "success"
 
 
+@pytest.mark.parametrize("command", ["compare", "preview"])
+def test_timestamp_conflict_explains_possible_clock_difference_without_authorization(cli_environment, command):
+    runner, args, server, local, *_ = cli_environment
+    (local / "index.html").write_bytes(b"local")
+    remote = server.storage / "site/index.html"
+    remote.write_bytes(b"remote")
+    os.utime(local / "index.html", (1700000000, 1700000000))
+    os.utime(remote, (1700000020, 1700000020))
+    result = runner.invoke(cli, args + [command, "example.com"])
+    data = json.loads(result.stdout)
+    assert result.exit_code == 3 and data["status"] == "conflict"
+    assert data["data"]["conflicts"] == ["index.html"]
+    assert "relógios" in " ".join(data["messages"])
+    assert "preview_token" not in data["data"] and data["data"]["would_upload"] == []
+    assert remote.read_bytes() == b"remote"
+
+
 def test_migrate_cli_uses_existing_logic_without_connection(tmp_path):
     source = tmp_path / "legacy"
     (source / "config").mkdir(parents=True)

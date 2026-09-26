@@ -89,7 +89,7 @@ def test_invalid_secret_is_rejected(value):
 
 def test_keyring_roundtrip_and_missing_credential(fake_keyring, key):
     store = KeyringStore()
-    with pytest.raises(CredentialError):
+    with pytest.raises(CredentialError, match="vhe-deploy credential DOMINIO"):
         store.get(key)
     store.set(key, SecretStr("fictional-password"))
     assert store.get(key).get_secret_value() == "fictional-password"

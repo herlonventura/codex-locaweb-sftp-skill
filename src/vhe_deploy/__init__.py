@@ -1,1 +1,1 @@
-"""Portable core under development; this package is not yet an MCP server."""
+"""VHE Deploy: portable SFTP/FTPS CLI and MCP server."""

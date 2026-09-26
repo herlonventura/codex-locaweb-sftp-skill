@@ -86,8 +86,12 @@ class Runtime:
         data = preview.summary()
         if issue_token and not preview.comparison.has_blockers:
             data.update(TokenStore(state_directory(site, self.state)).issue(preview))
-        return response("conflict" if preview.comparison.has_blockers else "success", data,
-                        ["Prévia calculada; nenhum arquivo enviado ou excluído."])
+        messages = ["Prévia calculada; nenhum arquivo enviado ou excluído."]
+        if preview.comparison.conflicts:
+            messages.append("Há arquivos com conteúdo diferente cuja data local não é mais de dois segundos posterior à remota. Isso pode indicar uma versão remota mais recente ou diferença entre relógios. Revise conteúdo e datas antes de editar e gerar outra prévia; não force datas nem ignore o conflito.")
+        if preview.comparison.blocked:
+            messages.append("Há arquivos bloqueados pelas regras de proteção. Revise a pasta publicável; não remova as proteções para enviar segredos ou backups.")
+        return response("conflict" if preview.comparison.has_blockers else "success", data, messages)
 
     def backup_site(self, domain):
         sites, domain, site, settings = self.site(domain)

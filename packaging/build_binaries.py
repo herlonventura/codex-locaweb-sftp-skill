@@ -13,6 +13,7 @@ def main():
             sys.executable, "-m", "PyInstaller", "--noconfirm", "--onedir", "--name", name,
             "--specpath", str(ROOT / "build"), "--workpath", str(ROOT / "build" / "pyinstaller"),
             "--distpath", str(ROOT / "dist" / "vhe-bin"), "--paths", str(ROOT / "src"),
+            "--add-data", str(ROOT / "LICENSE") + ":.",
             "--collect-submodules", "mcp.server", "--collect-submodules", "mcp.shared",
             "--hidden-import", "anyio._backends._asyncio", "--hidden-import", f"keyring.backends.{backend}",
             str(ROOT / "packaging" / entry),
