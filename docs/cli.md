@@ -1,10 +1,10 @@
 # CLI Python — cadastro, prévia, backup e envio
 
-A CLI funciona a partir do código-fonte. Não depende do FileZilla, WinSCP ou de dados já salvos no computador. A skill PowerShell existente mantém seu funcionamento anterior; ainda não foi trocada por esta CLI. A etapa 5 acrescentou o [servidor MCP](mcp-setup.md) e o token efêmero obrigatório também na CLI.
+A CLI funciona a partir do código-fonte, pacote instalado ou binário. Não depende do FileZilla, WinSCP ou de dados já salvos no computador. A skill PowerShell existente mantém seu funcionamento anterior; ainda não foi trocada por esta CLI. A etapa 5 acrescentou o [servidor MCP](mcp-setup.md) e o token efêmero obrigatório também na CLI. Para instalar com pip/pipx e usar `mcp-locaweb-sftp configurar`, veja [distribuição](distribution.md).
 
 ## Executar a partir do repositório
 
-Requer Python 3.11+ e as dependências de `requirements.txt`. A execução comprovada até esta etapa é Windows/Python 3.14.3. Em um ambiente virtual, instale as dependências e use:
+Requer Python 3.11+ e as dependências de `requirements.txt`. A matriz da etapa 7 executa Windows, Linux e macOS com Python 3.11 e 3.14; os resultados estão em [distribuição](distribution.md). Em um ambiente virtual, instale as dependências e use:
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -13,7 +13,7 @@ python -m mcp_locaweb_sftp --help
 python -m mcp_locaweb_sftp configurar
 ```
 
-Em um terminal POSIX, o equivalente para carregar o código-fonte é `export PYTHONPATH=src`. Isso descreve a chamada, não comprova execução nesse sistema. Pacote instalável, pipx, contêiner e binários pertencem à etapa 7.
+Em um terminal POSIX, o equivalente para carregar o código-fonte é `export PYTHONPATH=src`. Depois de instalar o pacote com pip/pipx, não é necessário definir `PYTHONPATH`; o comando instalado aceita as mesmas opções e aliases mostrados abaixo.
 
 ## Primeira instalação: perguntas por site
 

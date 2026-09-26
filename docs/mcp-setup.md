@@ -2,9 +2,11 @@
 
 O projeto expõe um servidor MCP usando o SDK Python oficial **mcp 2.2.0**, testado com seu cliente oficial. Funciona por stdin/stdout do processo local; não abre porta HTTP, não instala extensão e não modifica as configurações de nenhum aplicativo automaticamente. O nome da biblioteca é `mcp`, não o pacote independente `fastmcp`.
 
-A integração executada nesta etapa foi cliente oficial → processo stdio → servidores SFTP e FTPS em loopback, com credenciais fictícias. Não foi executada dentro de Claude Desktop, Cursor, Zed ou Codex, nem em hospedagem real. Configurações específicas desses clientes pertencem à documentação da etapa 8; a matriz Linux/macOS/Windows pertence à etapa 7.
+A integração executada nesta etapa foi cliente oficial → processo stdio → servidores SFTP e FTPS em loopback, com credenciais fictícias. Não foi executada dentro de Claude Desktop, Cursor, Zed ou Codex, nem em hospedagem real. Configurações específicas desses clientes pertencem à documentação da etapa 8; os resultados da matriz Linux/macOS/Windows e os comandos instaláveis estão em [distribuição](distribution.md).
 
 ## Preparar e iniciar
+
+Com o pacote instalado por pip/pipx, use `mcp-locaweb-sftp configurar` e `mcp-locaweb-sftp-mcp`. O segundo é o comando de entrada stdio para o cliente, sem precisar de `PYTHONPATH`. Para executar diretamente das fontes, siga o procedimento abaixo.
 
 No ambiente virtual do repositório, instale `requirements.txt`. Prepare o cadastro pelo [assistente local](cli.md), confirme a identidade do servidor por canal independente, cadastre a senha no cofre e teste a conexão. O MCP não solicita nem recebe senhas.
 

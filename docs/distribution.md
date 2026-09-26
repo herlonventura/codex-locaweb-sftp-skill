@@ -1,6 +1,20 @@
 # Instalação e distribuição Python
 
-Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `mcp-locaweb-sftp` e requer Python 3.11 ou superior. Não foi publicado no PyPI nem em registro de contêineres. A validação da etapa 7 está em andamento; os resultados serão registrados aqui depois da execução do CI.
+Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `mcp-locaweb-sftp` e requer Python 3.11 ou superior. Não foi publicado no PyPI nem em registro de contêineres.
+
+## Evidência da etapa 7 — 26/09/2026
+
+**Sete jobs aprovados** no [CI 36276055669](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36276055669), commit `9fe3ead0d6e84211b10a1c581bdf9c089434eba7`: seis combinações de SO/Python e um job Docker. A suíte principal passou com **467 testes em cada combinação**. Os testes da distribuição rodam separadamente para não mascarar o uso dos comandos instalados/congelados com importação das fontes.
+
+| Plataforma do runner | Python 3.11 | Python 3.14 | Binário validado |
+|---|---|---|---|
+| Windows X64 | 467 aprovados; 94,86% cobertura | 467 aprovados; 94,77% cobertura | Sim, construído com Python 3.11 |
+| Linux X64 | 467 aprovados; 95,09% cobertura | 467 aprovados; 95,01% cobertura | Sim, construído com Python 3.11 |
+| macOS ARM64 | 467 aprovados; 95,09% cobertura | 467 aprovados; 95,01% cobertura | Sim, construído com Python 3.11 |
+
+Em cada ambiente houve instalação por pip e pipx e teste MCP stdio. Dois cenários adicionais verificaram a distribuição instalada contra SFTP e FTPS locais; os mesmos dois cenários foram repetidos com os binários em cada SO. O job Docker passou nas verificações descritas adiante. Windows local/Python 3.14.3 também passou no pacote instalado e nos binários, incluindo os dois cenários por distribuição. Os avisos em Python 3.11 referem-se a APIs legadas usadas pelo servidor FTPS de teste, não a falhas da suíte.
+
+Os artefatos **distribution-Windows-X64**, **distribution-Linux-X64** e **distribution-macOS-ARM64** estão na página da execução acima, contendo wheel, fonte e bundle nativo. O download dos artefatos do GitHub pode exigir login. Os três sistemas passaram; não foi necessário abrir issue para plataforma pendente. WSL, outras arquiteturas/versões de SO e aplicativos MCP específicos não foram testados. Nenhum segredo real, cadastro de cliente ou conta de hospedagem foi usado.
 
 ## pip e pipx
 

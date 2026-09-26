@@ -65,7 +65,7 @@ O cancelamento cooperativo do cliente também não equivale a desfazer a publica
 - A disputa de trava foi testada com a mesma pasta de estado. Outras máquinas, clientes FTP independentes e aplicações remotas não são bloqueados por essa trava.
 - O servidor FTPS simulado atende às precondições de confinamento e ausência de escritores externos. Isso não comprova que um provedor real as atenda.
 - Não houve integração executada em Claude Desktop, Cursor, Zed ou Codex. O teste de interoperabilidade usa o cliente oficial do SDK MCP.
-- Execução comprovada até esta etapa: Windows/Python 3.14.3. Sintaxe Python 3.11 é analisada, mas não substitui executar esse interpretador. A matriz multi-SO pertence à etapa 7.
+- Na entrega da etapa 6, a execução comprovada era Windows/Python 3.14.3. A etapa 7 acrescentou CI em Windows/Linux/macOS com Python 3.11 e 3.14, instalação e binários: [evidências de distribuição](distribution.md). Os números acima preservam o registro da etapa 6.
 - Os novos cenários não exigiram alteração do código de produção. A etapa acrescenta evidências e reutiliza fixtures; não amplia permissões nem modifica a instalação operacional.
 
 Os números por entrega e as dependências utilizadas estão no [registro das etapas](migration-plan.md). Cobertura maior que 80% é uma condição de validação, não demonstração de ausência de falhas.
