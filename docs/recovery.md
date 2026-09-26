@@ -6,7 +6,7 @@ O sistema não oferece restauração ou rollback automático. Este procedimento 
 
 ## Descobrir o resultado
 
-1. Identifique o domínio, a pasta de estado usada pela chamada e `run_directory`, se recebido. O padrão é `~/.mcp-locaweb-sftp/state/runs/DOMINIO/ID/`.
+1. Identifique o domínio, a pasta de estado usada pela chamada e `run_directory`, se recebido. O padrão é `~/.vhe-deploy/state/runs/DOMINIO/ID/`.
 2. Consulte `deploy-result.json`: status, fase, arquivo ativo e lista `uploaded`. Esta lista contém apenas uploads cuja leitura posterior confirmou SHA-256. Arquivo ausente da lista pode ter sido escrito parcialmente ou concluído sem registro final.
 3. Preserve `backup/files/`, `backup/backup-manifest.json`, `sources/` e o diário. Não os edite para fazer o registro aparentar sucesso. O backup do deploy cobre somente os arquivos que seriam substituídos; o comando de backup completo exige seu próprio `backup-result.json` com sucesso.
 4. Verifique se o processo ainda está executando. Timeout/cancelamento do cliente não prova que parou: o worker MCP pode concluir a operação e gravar o resultado depois.

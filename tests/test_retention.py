@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from mcp_locaweb_sftp.core.retention import cleanup_successful_deploys, _remove_run
+from vhe_deploy.core.retention import cleanup_successful_deploys, _remove_run
 
 
 def completed(state, number, domain='example.com', **changes):

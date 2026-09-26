@@ -5,9 +5,9 @@ import socket
 
 import pytest
 
-from mcp_locaweb_sftp.core.checksum import sha256_bytes
-from mcp_locaweb_sftp.core.compare import FileState, compare_inventories
-from mcp_locaweb_sftp.core.guards import require_registered_domain
+from vhe_deploy.core.checksum import sha256_bytes
+from vhe_deploy.core.compare import FileState, compare_inventories
+from vhe_deploy.core.guards import require_registered_domain
 
 
 STAMP = datetime(2026, 1, 1, tzinfo=timezone.utc)

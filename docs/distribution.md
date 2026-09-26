@@ -1,6 +1,6 @@
 # Instalação e distribuição Python
 
-Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `mcp-locaweb-sftp` e requer Python 3.11 ou superior. Não foi publicado no PyPI nem em registro de contêineres.
+Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `vhe-deploy` e requer Python 3.11 ou superior. Não foi publicado no PyPI nem em registro de contêineres.
 
 ## Evidência da etapa 7 — 26/09/2026
 
@@ -25,22 +25,22 @@ python -m venv .venv
 # Linux/macOS: source .venv/bin/activate
 # PowerShell: .\.venv\Scripts\Activate.ps1
 python -m pip install .
-mcp-locaweb-sftp --help
-mcp-locaweb-sftp configurar
+vhe-deploy --help
+vhe-deploy configurar
 ```
 
 Ou use o pipx previamente instalado:
 
 ```sh
 pipx install .
-mcp-locaweb-sftp configurar
+vhe-deploy configurar
 ```
 
-Também é possível instalar o arquivo `.whl` dos artefatos do workflow **Python distribution** com `pip install caminho/do/pacote.whl` ou `pipx install caminho/do/pacote.whl`. Não use `pip install mcp-locaweb-sftp` sem indicar arquivo/repositório: este projeto ainda não está publicado no PyPI. Para versões reproduzíveis do código, use um commit específico do repositório; os intervalos de dependências não constituem um lockfile.
+Também é possível instalar o arquivo `.whl` dos artefatos do workflow **Python distribution** com `pip install caminho/do/pacote.whl` ou `pipx install caminho/do/pacote.whl`. Não use `pip install vhe-deploy` sem indicar arquivo/repositório: este projeto ainda não está publicado no PyPI. Para versões reproduzíveis do código, use um commit específico do repositório; os intervalos de dependências não constituem um lockfile.
 
-Os comandos instalados são `mcp-locaweb-sftp` (CLI) e `mcp-locaweb-sftp-mcp` (servidor stdio). O módulo `python -m mcp_locaweb_sftp` continua funcionando. Configuração e estado ficam, por padrão, em `~/.mcp-locaweb-sftp`, fora do pacote. A instalação não importa cadastros, cadastra senhas nem conecta a servidores.
+Os comandos instalados são `vhe-deploy` (CLI) e `vhe-deploy-mcp` (servidor stdio). O módulo `python -m vhe_deploy` continua funcionando. Configuração e estado ficam, por padrão, em `~/.vhe-deploy`, fora do pacote. A instalação não importa cadastros, cadastra senhas nem conecta a servidores.
 
-Para iniciar o MCP, configure o cliente com o caminho absoluto de `mcp-locaweb-sftp-mcp`. As opções `--sites`, `--settings` e `--state-dir` permitem indicar arquivos/diretório privados. Não coloque senhas na configuração do cliente. Veja o [contrato MCP](mcp-setup.md) e a [CLI](cli.md).
+Para iniciar o MCP, configure o cliente com o caminho absoluto de `vhe-deploy-mcp`. As opções `--sites`, `--settings` e `--state-dir` permitem indicar arquivos/diretório privados. Não coloque senhas na configuração do cliente. Veja o [contrato MCP](mcp-setup.md) e a [CLI](cli.md).
 
 ## Binários por sistema
 
@@ -53,8 +53,8 @@ Os executáveis são de desenvolvimento, sem assinatura Authenticode ou notariza
 ## Docker
 
 ```sh
-docker build -t mcp-locaweb-sftp:local .
-docker run --rm --entrypoint mcp-locaweb-sftp mcp-locaweb-sftp:local --help
+docker build -t vhe-deploy:local .
+docker run --rm --entrypoint vhe-deploy vhe-deploy:local --help
 ```
 
 A entrada padrão é MCP stdio. O contêiner roda como UID 10001, inclui certificados CA e `age` da distribuição Debian, e não abre uma porta HTTP. Para integrar com um cliente, use `docker` como comando e argumentos equivalentes a:
@@ -64,7 +64,7 @@ docker run --rm -i \
   --mount type=bind,src=/caminho/privado/config,dst=/config,readonly \
   --mount type=bind,src=/caminho/privado/estado,dst=/state \
   --mount type=bind,src=/caminho/do/site,dst=/site-local,readonly \
-  mcp-locaweb-sftp:local \
+  vhe-deploy:local \
   --sites /config/sites.yaml --settings /config/settings.yaml --state-dir /state
 ```
 

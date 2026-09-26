@@ -7,9 +7,9 @@ import sqlite3
 
 import pytest
 
-from mcp_locaweb_sftp.core.compare import compare_inventories
-from mcp_locaweb_sftp.core.preview import Preview
-from mcp_locaweb_sftp.core.tokens import TokenError, TokenStore
+from vhe_deploy.core.compare import compare_inventories
+from vhe_deploy.core.preview import Preview
+from vhe_deploy.core.tokens import TokenError, TokenStore
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ def test_wrong_scope_cannot_be_used_and_consumes_attempt(receipt, scope):
 @pytest.mark.parametrize("wall,monotonic,valid", [(299,299,True), (300,300,False), (301,301,False),
     (-1,1,False), (1,-1,False), (1,300,False), (300,1,False), (float("nan"),1,False)])
 def test_expiry_boundary_and_clock_changes_fail_closed(receipt, monkeypatch, wall, monotonic, valid):
-    import mcp_locaweb_sftp.core.tokens as module
+    import vhe_deploy.core.tokens as module
     clock = [1000.0, 1000.0]
     monkeypatch.setattr(module.time, "time", lambda: clock[0])
     monkeypatch.setattr(module.time, "monotonic", lambda: clock[1])
@@ -77,7 +77,7 @@ def test_blocked_preview_never_issues_token(receipt):
 
 
 def test_receipts_are_pruned_after_expiry(receipt, monkeypatch):
-    import mcp_locaweb_sftp.core.tokens as module
+    import vhe_deploy.core.tokens as module
     store, preview = receipt
     old = store.issue(preview)
     monkeypatch.setattr(module.time, "time", lambda: old["expires_at"] + 1)

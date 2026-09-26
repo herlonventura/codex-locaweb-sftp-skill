@@ -57,7 +57,7 @@ Instalação de desenvolvimento, a partir da raiz do repositório:
 
 ```text
 python -m pip install -r requirements-dev.txt
-python -m pytest -q --cov=mcp_locaweb_sftp --cov-branch --cov-report=term-missing --cov-fail-under=81
+python -m pytest -q --cov=vhe_deploy --cov-branch --cov-report=term-missing --cov-fail-under=81
 ```
 
 `requirements.txt` contém a dependência de execução Paramiko. `requirements-dev.txt` acrescenta os testes e o servidor FTPS. Não é necessário WinSCP para o código Python.

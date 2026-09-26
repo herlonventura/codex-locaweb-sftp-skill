@@ -1,8 +1,10 @@
-# SFTP/FTPS para sites — CLI Python e servidor MCP
+# VHE Deploy — CLI e servidor MCP para SFTP/FTPS
+
+Comandos oficiais: **`vhe-deploy`** e **`vhe-deploy-mcp`**. A marca identifica a ferramenta, sem limitar o provedor de hospedagem. [Mudança de nome e configuração](docs/vhe-deploy.md).
 
 Gerencie arquivos de sites pelo **domínio completo cadastrado**: compare versões, gere uma prévia, faça backup e envie alterações verificadas. A implementação Python oferece CLI e servidor MCP local via **stdio**, com SFTP/FTPS, identidade do servidor validada, credenciais separadas da configuração e publicação desativada por padrão.
 
-Versão de desenvolvimento: **0.1.0a1**. O projeto atende a Locaweb e pode operar outros servidores compatíveis com os requisitos documentados; não administra painel de revenda, DNS, e-mail ou bancos de dados. Não há FTP sem criptografia na implementação Python.
+Versão de desenvolvimento: **0.1.0a1**. Gerencie sites em provedores com SFTP/FTPS compatíveis com os requisitos documentados; não administra painel de revenda, DNS, e-mail ou bancos de dados. Não há FTP sem criptografia na implementação Python.
 
 A skill e os scripts PowerShell anteriores permanecem disponíveis, com suas dependências Windows/WinSCP/DPAPI: [guia legado](docs/legacy-windows.md). Instalar o Python não substitui essa skill automaticamente.
 
@@ -14,12 +16,12 @@ Requer Python 3.11+ e Git. Com pipx já instalado:
 git clone https://github.com/herlonventura/codex-locaweb-sftp-skill.git
 cd codex-locaweb-sftp-skill
 pipx install .
-mcp-locaweb-sftp configurar
+vhe-deploy configurar
 ```
 
 O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e provedor da senha. Não depende de FileZilla. A senha é digitada em prompt oculto no terminal quando se usa keyring/age; nunca no chat, no YAML ou em argumento. Sem fingerprint SFTP confirmada ou cofre disponível, o cadastro permanece pendente. O assistente não conecta nem envia arquivos.
 
-**Não há publicação no PyPI:** use o repositório ou o wheel dos artefatos; `pipx install mcp-locaweb-sftp` sem um caminho não é o procedimento desta entrega.
+**Não há publicação no PyPI:** use o repositório ou o wheel dos artefatos; `pipx install vhe-deploy` sem um caminho não é o procedimento desta entrega.
 
 - [Instalação por venv/pip e primeiro cadastro](docs/install.md)
 - [pipx, Docker, binários e resultados do CI](docs/distribution.md)
@@ -48,29 +50,29 @@ O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e p
 ## Usar a CLI
 
 ```sh
-mcp-locaweb-sftp list
-mcp-locaweb-sftp info exemplo.com.br
-mcp-locaweb-sftp test exemplo.com.br
-mcp-locaweb-sftp compare exemplo.com.br
-mcp-locaweb-sftp backup exemplo.com.br
-mcp-locaweb-sftp preview exemplo.com.br
+vhe-deploy list
+vhe-deploy info exemplo.com.br
+vhe-deploy test exemplo.com.br
+vhe-deploy compare exemplo.com.br
+vhe-deploy backup exemplo.com.br
+vhe-deploy preview exemplo.com.br
 ```
 
 `list` e `info` leem configuração local; as demais ações acima acessam o servidor. Execute somente a ação pretendida para o domínio correto. Aliases: `listar`, `configurar`, `testar`, `comparar`, `previa`, `enviar` e `migrar`. [Opções, códigos de saída e fluxo completo](docs/cli.md).
 
-Cada cadastro fixa pasta local e raiz remota. Por padrão, configuração e estado ficam em `~/.mcp-locaweb-sftp`. Use `--sites`, `--settings` e `--state-dir` antes do subcomando para caminhos próprios. Não coloque essas pastas dentro da publicação ou do Git.
+Cada cadastro fixa pasta local e raiz remota. Por padrão, configuração e estado ficam em `~/.vhe-deploy`. Use `--sites`, `--settings` e `--state-dir` antes do subcomando para caminhos próprios. Não coloque essas pastas dentro da publicação ou do Git.
 
 Para enviar, é necessário habilitar conscientemente `publish_enabled` no site **e** nas configurações globais, gerar a prévia e revisar o plano. Somente depois da autorização:
 
 ```text
-mcp-locaweb-sftp deploy exemplo.com.br --preview-hash HASH_DA_PREVIA --preview-token TOKEN_DA_PREVIA --confirm
+vhe-deploy deploy exemplo.com.br --preview-hash HASH_DA_PREVIA --preview-token TOKEN_DA_PREVIA --confirm
 ```
 
 Os marcadores devem ser substituídos pelo resultado da prévia; não são valores utilizáveis. O token vale **cinco minutos**, é vinculado ao domínio/plano e tem uso único. Não o publique em Git/logs/scripts. Mudança no plano bloqueia o envio. Token e `confirm` não provam consentimento humano: o cliente continua responsável por respeitar a autorização do usuário.
 
 ## Usar com uma IA
 
-O cliente inicia **`mcp-locaweb-sftp-mcp`** e se comunica pelo stdin/stdout. Não existe porta HTTP/SSE nem configuração universal para todos os aplicativos. Os [exemplos por cliente](docs/mcp-clients.md) usam caminhos absolutos e não contêm senhas.
+O cliente inicia **`vhe-deploy-mcp`** e se comunica pelo stdin/stdout. Não existe porta HTTP/SSE nem configuração universal para todos os aplicativos. Os [exemplos por cliente](docs/mcp-clients.md) usam caminhos absolutos e não contêm senhas.
 
 | Ferramenta | Operação |
 |---|---|
@@ -105,10 +107,10 @@ Em um venv, instale `requirements-dev.txt`. A suíte usa servidores em loopback,
 
 ```sh
 python -m pip install -r requirements-dev.txt
-python -m pytest -q --ignore=tests/test_distribution.py --cov=mcp_locaweb_sftp --cov-branch --cov-fail-under=81
+python -m pytest -q --ignore=tests/test_distribution.py --cov=vhe_deploy --cov-branch --cov-fail-under=81
 ```
 
-Para os testes criptográficos, instale age/age-keygen ou configure `MCP_LOCAWEB_TEST_AGE`; sem eles, há skips. Os testes de distribuição precisam dos comandos empacotados e rodam separadamente pelo procedimento em [distribuição](docs/distribution.md). Não execute testes contra cadastros reais.
+Para os testes criptográficos, instale age/age-keygen ou configure `VHE_DEPLOY_TEST_AGE`; sem eles, há skips. Os testes de distribuição precisam dos comandos empacotados e rodam separadamente pelo procedimento em [distribuição](docs/distribution.md). Não execute testes contra cadastros reais.
 
 A documentação da etapa 8 não executou migração de produção nem configurou aplicativos locais. A validação adicional cobriu o cofre real Windows e a descoberta no Codex App Server. PyPI, homologação das interfaces dos aplicativos, cofres reais Linux/macOS e definição de licença permanecem pendentes; não confunda a conclusão das oito etapas com essas validações adicionais.
 

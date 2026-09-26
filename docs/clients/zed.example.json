@@ -1,7 +1,7 @@
 {
   "context_servers": {
-    "locawebSftp": {
-      "command": "/CAMINHO/ABSOLUTO/mcp-locaweb-sftp-mcp",
+    "vheDeploy": {
+      "command": "/CAMINHO/ABSOLUTO/vhe-deploy-mcp",
       "args": [
         "--sites",
         "/CAMINHO/PRIVADO/sites.yaml",

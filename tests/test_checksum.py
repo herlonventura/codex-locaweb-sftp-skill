@@ -1,6 +1,6 @@
 import pytest
 
-from mcp_locaweb_sftp.core.checksum import normalize_sha256, sha256_bytes, sha256_chunks
+from vhe_deploy.core.checksum import normalize_sha256, sha256_bytes, sha256_chunks
 
 
 @pytest.mark.parametrize(("content", "expected"), [

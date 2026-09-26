@@ -11,6 +11,7 @@ async def smoke(command, args):
         params = StdioServerParameters(command=command, args=args, cwd=temporary,
                                       env={"PYTHONPATH": "", "PYTHONIOENCODING": "utf-8"})
         async with Client(params, read_timeout_seconds=45) as client:
+            assert client.server_info is not None and client.server_info.name == 'vhe-deploy'
             tools = {t.name: t for t in (await client.list_tools()).tools}
             assert set(tools) == {"list_sites", "test_connection", "compare_site", "preview_deploy",
                                   "backup_site", "deploy_site", "register_site"}

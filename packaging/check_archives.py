@@ -1,5 +1,6 @@
 """Allowlist source/wheel members: no local configuration or build leftovers."""
 from pathlib import Path, PurePosixPath
+import configparser
 import tarfile
 import zipfile
 
@@ -7,12 +8,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def check():
-    wheels = list((ROOT / "dist").glob("*.whl"))
-    sources = list((ROOT / "dist").glob("mcp_locaweb_sftp-*.tar.gz"))
+    wheels = list((ROOT / "dist").glob("vhe_deploy-*.whl"))
+    sources = list((ROOT / "dist").glob("vhe_deploy-*.tar.gz"))
     assert len(wheels) == len(sources) == 1, "Expected exactly one wheel and source archive"
     source_files = {p.relative_to(ROOT).as_posix() for p in (ROOT / "src").rglob("*.py")}
     with zipfile.ZipFile(wheels[0]) as archive:
         files = {n for n in archive.namelist() if not n.endswith("/")}
+        entrypoints = configparser.ConfigParser()
+        entrypoints.read_string(archive.read(next(n for n in files if n.endswith('/entry_points.txt'))).decode())
+        assert set(entrypoints['console_scripts']) == {'vhe-deploy', 'vhe-deploy-mcp'}, 'Unexpected command names'
         expected = {n.removeprefix("src/") for n in source_files}
         assert expected <= files, "Missing Python source in wheel"
         for name in files - expected:

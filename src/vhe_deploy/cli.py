@@ -54,7 +54,7 @@ class SafeGroup(click.Group):
         return code
 
 
-_home = Path.home() / ".mcp-locaweb-sftp"
+_home = Path.home() / ".vhe-deploy"
 
 
 @click.group(cls=SafeGroup, context_settings={"help_option_names": ["-h", "--help"]})
@@ -63,7 +63,7 @@ _home = Path.home() / ".mcp-locaweb-sftp"
 @click.option("--state-dir", type=click.Path(path_type=Path), default=_home / "state", show_default=True)
 @click.pass_context
 def cli(ctx, sites, settings, state_dir):
-    """Gerencie sites pelo domínio completo; nenhuma operação exclui arquivos remotos."""
+    """VHE Deploy: gerencie sites por SFTP/FTPS; sem exclusões remotas."""
     ctx.obj = Runtime(sites, settings, state_dir)
 
 

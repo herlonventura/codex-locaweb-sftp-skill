@@ -51,7 +51,7 @@ def main():
     executable = target / ("age.exe" if windows else "age")
     if "GITHUB_ENV" in os.environ:
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as stream:
-            stream.write(f"MCP_LOCAWEB_TEST_AGE={executable}\n")
+            stream.write(f"VHE_DEPLOY_TEST_AGE={executable}\n")
     print(executable)
 
 

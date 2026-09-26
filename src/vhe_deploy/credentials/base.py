@@ -31,7 +31,7 @@ class CredentialKey:
 
     @property
     def env_name(self):
-        return "MCP_LOCAWEB_PASSWORD_" + self.digest.upper()
+        return "VHE_DEPLOY_PASSWORD_" + self.digest.upper()
 
 
 class CredentialStore(Protocol):

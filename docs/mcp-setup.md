@@ -6,23 +6,23 @@ A integração executada foi cliente oficial → processo stdio → servidores S
 
 ## Preparar e iniciar
 
-Com o pacote instalado por pip/pipx, use `mcp-locaweb-sftp configurar` e `mcp-locaweb-sftp-mcp`. O segundo é o comando de entrada stdio para o cliente, sem precisar de `PYTHONPATH`. Para executar diretamente das fontes, siga o procedimento abaixo.
+Com o pacote instalado por pip/pipx, use `vhe-deploy configurar` e `vhe-deploy-mcp`. O segundo é o comando de entrada stdio para o cliente, sem precisar de `PYTHONPATH`. Para executar diretamente das fontes, siga o procedimento abaixo.
 
 No ambiente virtual do repositório, instale `requirements.txt`. Prepare o cadastro pelo [assistente local](cli.md), confirme a identidade do servidor por canal independente, cadastre a senha no cofre e teste a conexão. O MCP não solicita nem recebe senhas.
 
 ```powershell
 python -m pip install -r requirements.txt
 $env:PYTHONPATH = 'src'
-python -m mcp_locaweb_sftp configurar
-python -m mcp_locaweb_sftp.mcp_server
+python -m vhe_deploy configurar
+python -m vhe_deploy.mcp_server
 ```
 
 O último comando inicia um processo à espera de um cliente MCP. Não é um prompt para digitar comandos manualmente. Durante o atendimento, stdout contém somente o protocolo; logs brutos de bibliotecas estão desativados para evitar exposição acidental. Falhas operacionais usam respostas estruturadas sanitizadas.
 
-Por padrão, o servidor lê `~/.mcp-locaweb-sftp/sites.yaml` e `settings.yaml`, e usa `~/.mcp-locaweb-sftp/state`. Para outros caminhos:
+Por padrão, o servidor lê `~/.vhe-deploy/sites.yaml` e `settings.yaml`, e usa `~/.vhe-deploy/state`. Para outros caminhos:
 
 ```text
-python -m mcp_locaweb_sftp.mcp_server --sites CAMINHO/sites.yaml --settings CAMINHO/settings.yaml --state-dir CAMINHO/state
+python -m vhe_deploy.mcp_server --sites CAMINHO/sites.yaml --settings CAMINHO/settings.yaml --state-dir CAMINHO/state
 ```
 
 Use caminhos absolutos na configuração do cliente, inclusive para o Python do ambiente virtual. A informação necessária ao lançador é:
@@ -30,7 +30,7 @@ Use caminhos absolutos na configuração do cliente, inclusive para o Python do 
 ```json
 {
   "command": "C:/caminho/do/projeto/.venv/Scripts/python.exe",
-  "args": ["-m", "mcp_locaweb_sftp.mcp_server"],
+  "args": ["-m", "vhe_deploy.mcp_server"],
   "env": {
     "PYTHONPATH": "C:/caminho/do/projeto/src"
   }

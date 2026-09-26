@@ -14,7 +14,7 @@ DEFAULT_BLOCKED_PATTERNS = (
     "configuration.php", "config.php", ".htaccess", "web.config", "agents.md",
     "*.bak", "*.backup", "*.tmp", "*.temp", "*.log", "*.pem", "*.key",
     "*.pfx", "*.p12", "*.ps1", ".htpasswd", "id_rsa", "id_ed25519",
-    "*.age", "*.identity", "credentials", "private-config", ".mcp-locaweb-sftp", "preview-tokens", "receipts.sqlite3*",
+    "*.age", "*.identity", "credentials", "private-config", ".vhe-deploy", ".mcp-locaweb-sftp", "preview-tokens", "receipts.sqlite3*",
     "sites.yaml", "settings.yaml", "sites.json", "settings.json", "migration.json",
     "deploy-result.json", "backup-result.json", "backup-manifest.json",
 )

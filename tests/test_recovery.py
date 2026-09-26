@@ -10,12 +10,12 @@ from click.testing import CliRunner
 import pytest
 import yaml
 
-from mcp_locaweb_sftp.cli import cli
-from mcp_locaweb_sftp.config import load_sites
-from mcp_locaweb_sftp.core.deploy import OperationError
-from mcp_locaweb_sftp.core.tokens import TokenError, TokenStore
-from mcp_locaweb_sftp.credentials import CredentialError, CredentialKey
-from mcp_locaweb_sftp.operations import Runtime
+from vhe_deploy.cli import cli
+from vhe_deploy.config import load_sites
+from vhe_deploy.core.deploy import OperationError
+from vhe_deploy.core.tokens import TokenError, TokenStore
+from vhe_deploy.credentials import CredentialError, CredentialKey
+from vhe_deploy.operations import Runtime
 
 
 def approve(runtime):
@@ -61,7 +61,7 @@ def test_process_death_preserves_originals_journal_consumption_and_stale_lock(si
 
 
 def test_second_domain_on_same_endpoint_cannot_deploy_during_backup(site_runtime, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
+    import vhe_deploy.core.deploy as module
     runtime, server, _, site, _ = site_runtime
     sites = load_sites(runtime.sites_file)
     sites["other.example.com"] = site
@@ -97,7 +97,7 @@ def test_second_domain_on_same_endpoint_cannot_deploy_during_backup(site_runtime
 
 
 def test_failure_in_last_original_backup_prevents_every_upload(site_runtime, monkeypatch):
-    from mcp_locaweb_sftp.backends.base import Backend
+    from vhe_deploy.backends.base import Backend
     runtime, server, local, *_ = site_runtime
     (server.storage / "site/z.html").write_bytes(b"second original")
     (local / "z.html").write_bytes(b"second update")
@@ -124,8 +124,8 @@ def test_failure_in_last_original_backup_prevents_every_upload(site_runtime, mon
 
 
 def test_cli_reports_partial_with_exit_four_and_requires_new_preview(site_runtime, monkeypatch):
-    from mcp_locaweb_sftp.backends.ftps import FTPSBackend
-    from mcp_locaweb_sftp.backends.sftp import SFTPBackend
+    from vhe_deploy.backends.ftps import FTPSBackend
+    from vhe_deploy.backends.sftp import SFTPBackend
     runtime, server, _, site, _ = site_runtime
     approved = approve(runtime)
     backend = SFTPBackend if site.protocol == "sftp" else FTPSBackend
@@ -145,7 +145,7 @@ def test_cli_reports_partial_with_exit_four_and_requires_new_preview(site_runtim
 
 
 def test_registered_domains_do_not_share_credentials_implicitly(site_runtime, monkeypatch):
-    import mcp_locaweb_sftp.connection as connection
+    import vhe_deploy.connection as connection
     runtime, _, _, site, _ = site_runtime
     with runtime.edit_registry() as sites:
         sites["other.example.com"] = site

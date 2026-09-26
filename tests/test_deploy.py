@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from mcp_locaweb_sftp.config import Settings, Site
-from mcp_locaweb_sftp.core.deploy import OperationError, backup_site, deploy, operation_lock, state_directory
-from mcp_locaweb_sftp.core.local import local_inventory
-from mcp_locaweb_sftp.core.preview import make_preview
-from mcp_locaweb_sftp.core.tokens import TokenStore
+from vhe_deploy.config import Settings, Site
+from vhe_deploy.core.deploy import OperationError, backup_site, deploy, operation_lock, state_directory
+from vhe_deploy.core.local import local_inventory
+from vhe_deploy.core.preview import make_preview
+from vhe_deploy.core.tokens import TokenStore
 
 
 @pytest.fixture
@@ -105,7 +105,7 @@ def test_retention_failure_does_not_invalidate_success(flow, monkeypatch):
     seed(flow, nested=False)
     def fail(*args):
         raise OSError('sensitive detail not for output')
-    monkeypatch.setattr('mcp_locaweb_sftp.core.deploy.cleanup_successful_deploys', fail)
+    monkeypatch.setattr('vhe_deploy.core.deploy.cleanup_successful_deploys', fail)
     result = execute(flow)
     assert result['status'] == 'success'
     assert result['data']['retention']['status'] == 'incomplete'
@@ -118,21 +118,21 @@ def test_failed_or_noop_deploy_does_not_run_retention(flow, monkeypatch):
     seed(flow, nested=False)
     def unexpected(*args):
         pytest.fail('Cleanup must not run')
-    monkeypatch.setattr('mcp_locaweb_sftp.core.deploy.cleanup_successful_deploys', unexpected)
+    monkeypatch.setattr('vhe_deploy.core.deploy.cleanup_successful_deploys', unexpected)
     (flow[2] / 'index.html').write_bytes(b'previous longer version')
     assert execute(flow)['status'] == 'success'  # Nothing changed.
     (flow[2] / 'index.html').write_bytes(b'new')
     os.utime(flow[2] / 'index.html', (1700000010, 1700000010))
     def fail_backup(*args):
         raise OSError('simulated disk failure')
-    monkeypatch.setattr('mcp_locaweb_sftp.core.deploy.backup_files', fail_backup)
+    monkeypatch.setattr('vhe_deploy.core.deploy.backup_files', fail_backup)
     assert execute(flow)['status'] == 'error'
 
 
 @pytest.mark.parametrize('fail_journal', [False, True])
 def test_retention_warning_or_journal_failure_preserves_saved_upload_success(flow, monkeypatch, fail_journal):
     seed(flow, nested=False)
-    from mcp_locaweb_sftp.core import deploy as coordinator
+    from vhe_deploy.core import deploy as coordinator
     original = coordinator.save_record
     def write(path, record):
         if fail_journal and 'retention' in record.get('data', {}):
@@ -200,7 +200,7 @@ def test_changed_preview_is_rejected_before_upload(flow, change):
 
 
 def test_backup_failure_prevents_all_uploads(flow, monkeypatch):
-    import mcp_locaweb_sftp.core.backup as module
+    import vhe_deploy.core.backup as module
     seed(flow)
     backend, server, *_ = flow
     def disk_failure(*args, **kwargs):
@@ -214,7 +214,7 @@ def test_backup_failure_prevents_all_uploads(flow, monkeypatch):
 
 
 def test_corrupted_backup_is_rechecked_before_replacement(flow, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
+    import vhe_deploy.core.deploy as module
     seed(flow, nested=False)
     original = module.backup_files
     def corrupt(*args, **kwargs):
@@ -228,7 +228,7 @@ def test_corrupted_backup_is_rechecked_before_replacement(flow, monkeypatch):
 
 
 def test_change_after_backup_stops_before_first_remote_mutation(flow, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
+    import vhe_deploy.core.deploy as module
     seed(flow)
     original = module.backup_files
     def change(*args, **kwargs):
@@ -293,7 +293,7 @@ def test_state_cannot_be_inside_publication_tree(flow):
 
 
 def test_initial_journal_error_prevents_mutations(flow, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
+    import vhe_deploy.core.deploy as module
     seed(flow)
     def fail(*args):
         raise OSError("disk failure")
@@ -315,7 +315,7 @@ def test_full_backup_includes_remote_only_files_without_remote_changes(flow):
 
 
 def test_full_backup_rejects_inventory_changed_after_download(flow, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
+    import vhe_deploy.core.deploy as module
     seed(flow)
     backend, server, _, site, _, state = flow
     original = module.backup_files
@@ -332,7 +332,7 @@ def test_full_backup_rejects_inventory_changed_after_download(flow, monkeypatch)
 
 
 def test_journal_failure_after_upload_retains_write_ahead_evidence(flow, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
+    import vhe_deploy.core.deploy as module
     seed(flow, nested=False)
     original = module.save_record
     def fail_after_upload(path, record):

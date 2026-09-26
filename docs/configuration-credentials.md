@@ -41,7 +41,7 @@ Seleciona diretamente o backend nativo: Windows Credential Locker, macOS Keychai
 
 Linux precisa do serviço Secret Service e sessão D-Bus apropriados. KWallet não está implementado nesta seleção. As credenciais do cofre continuam pertencendo ao usuário/SO; **portabilidade do programa não significa que o cofre nativo possa ser copiado entre máquinas**. Para migração de credenciais entre ambientes, use age ou faça novo cadastro.
 
-As entradas usam o namespace `mcp-locaweb-sftp/v1` e o identificador da conexão. `KeyringStore.set/get` não acessa as entradas de outros aplicativos. Limites de tamanho do cofre nativo podem ser menores que os 16.384 caracteres aceitos pelo validador; a falha é reportada sem substituir o provedor.
+As entradas usam o namespace `vhe-deploy/v1` e o identificador da conexão. `KeyringStore.set/get` não acessa as entradas de outros aplicativos. Limites de tamanho do cofre nativo podem ser menores que os 16.384 caracteres aceitos pelo validador; a falha é reportada sem substituir o provedor.
 
 ### Arquivo criptografado (`age`)
 
@@ -64,7 +64,7 @@ O programa guarda senha em memória durante a operação. A identidade privada �
 
 ### Variável de ambiente (`env`)
 
-Somente leitura. O nome exato é `MCP_LOCAWEB_PASSWORD_` seguido do identificador completo da conexão em hexadecimal maiúsculo, disponível em `CredentialKey.env_name`. Não existe variável global de senha, aproximação de domínio ou busca em `.env`.
+Somente leitura. O nome exato é `VHE_DEPLOY_PASSWORD_` seguido do identificador completo da conexão em hexadecimal maiúsculo, disponível em `CredentialKey.env_name`. Não existe variável global de senha, aproximação de domínio ou busca em `.env`.
 
 A variável deve ser injetada pelo ambiente/cofre do CI. Não gravá-la em arquivos versionados ou histórico de comandos. **Ambiente é texto em memória, não criptografia**; processos autorizados podem lê-lo e filhos podem herdá-lo. O provedor não persiste o valor nem modifica o ambiente.
 
@@ -103,6 +103,6 @@ O age **v1.3.2 real** foi executado no Windows, com pacote da [distribuição of
 
 O cofre nativo foi simulado nos testes de leitura/escrita; não foram cadastradas senhas no cofre real do usuário. A seleção da classe nativa foi conferida no Windows, mas integração real com Windows Credential Locker, macOS Keychain e Secret Service continua pendente. Não afirmar validação multi-SO com base nestes testes.
 
-Para incluir os testes reais de age, instale age/age-keygen de fonte confiável no mesmo diretório e disponibilize `age` no PATH ou indique seu caminho pela variável **de testes** `MCP_LOCAWEB_TEST_AGE`. Sem o executável, esses testes aparecem como **skipped**, não como validação criptográfica realizada. A instalação age usada no desenvolvimento ficou dentro do ambiente virtual ignorado pelo Git.
+Para incluir os testes reais de age, instale age/age-keygen de fonte confiável no mesmo diretório e disponibilize `age` no PATH ou indique seu caminho pela variável **de testes** `VHE_DEPLOY_TEST_AGE`. Sem o executável, esses testes aparecem como **skipped**, não como validação criptográfica realizada. A instalação age usada no desenvolvimento ficou dentro do ambiente virtual ignorado pelo Git.
 
 Referências: [backends e configuração de keyring](https://keyring.readthedocs.io/en/latest/), [modelos Pydantic](https://docs.pydantic.dev/latest/concepts/models/) e [age](https://github.com/FiloSottile/age).

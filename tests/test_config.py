@@ -7,12 +7,12 @@ from pydantic import ValidationError
 import pytest
 import yaml
 
-from mcp_locaweb_sftp.config import ConfigError, Settings, Site, load_settings, load_sites
-from mcp_locaweb_sftp.config.loader import parse_document, sites_from_mapping
-from mcp_locaweb_sftp.config.migration import migrate_legacy
-from mcp_locaweb_sftp.config.schema import native_path
-from mcp_locaweb_sftp.core.guards import is_blocked_path
-from mcp_locaweb_sftp.local_files import checked_path, read_limited, write_private
+from vhe_deploy.config import ConfigError, Settings, Site, load_settings, load_sites
+from vhe_deploy.config.loader import parse_document, sites_from_mapping
+from vhe_deploy.config.migration import migrate_legacy
+from vhe_deploy.config.schema import native_path
+from vhe_deploy.core.guards import is_blocked_path
+from vhe_deploy.local_files import checked_path, read_limited, write_private
 
 
 @pytest.fixture
@@ -186,7 +186,7 @@ def test_migration_rejects_unknown_mapping_and_output_inside_source(legacy_insta
 
 
 def test_failed_migration_keeps_incomplete_output_without_completion_marker(legacy_installation, tmp_path, monkeypatch):
-    import mcp_locaweb_sftp.config.migration as module
+    import vhe_deploy.config.migration as module
     original = module.write_private
     def failing(path, data):
         if path.name == "settings.yaml":

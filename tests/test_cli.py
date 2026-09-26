@@ -6,9 +6,9 @@ from click.testing import CliRunner
 import pytest
 import yaml
 
-from mcp_locaweb_sftp.cli import cli
-from mcp_locaweb_sftp.config import Settings, Site, load_sites
-from mcp_locaweb_sftp.credentials import CredentialKey
+from vhe_deploy.cli import cli
+from vhe_deploy.config import Settings, Site, load_sites
+from vhe_deploy.credentials import CredentialKey
 
 
 @pytest.fixture
@@ -125,7 +125,7 @@ def test_register_new_domain_is_disabled_and_cannot_replace(cli_environment, tmp
 
 
 def test_hidden_credential_prompt_does_not_print_password(cli_environment, monkeypatch):
-    import mcp_locaweb_sftp.cli as module
+    import vhe_deploy.cli as module
     runner, args, *_ = cli_environment
     stored = []
     class Store:
@@ -161,7 +161,7 @@ def test_help_lists_aliases_without_reading_configuration():
 
 @pytest.fixture
 def fresh_setup(tmp_path, monkeypatch):
-    import mcp_locaweb_sftp.cli as module
+    import vhe_deploy.cli as module
     def forbidden(*args, **kwargs):
         pytest.fail("Setup must not connect or scan a host")
     monkeypatch.setattr(module, "open_site", forbidden)
@@ -178,7 +178,7 @@ def fresh_setup(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("protocol", ["sftp", "ftps"])
 def test_setup_from_scratch_never_connects_or_enables_publication(fresh_setup, protocol):
-    from mcp_locaweb_sftp.config import load_settings
+    from vhe_deploy.config import load_settings
     runner, args, sites, settings, answers = fresh_setup
     result = runner.invoke(cli, args + ["configurar"], input=answers(protocol=protocol))
     assert result.exit_code == 0, result.output
@@ -194,7 +194,7 @@ def test_setup_from_scratch_never_connects_or_enables_publication(fresh_setup, p
 
 
 def test_setup_without_pin_preserves_disabled_pending_registration(fresh_setup, monkeypatch):
-    import mcp_locaweb_sftp.cli as module
+    import vhe_deploy.cli as module
     runner, args, sites, _, answers = fresh_setup
     monkeypatch.setattr(module, "selected_store", lambda *a: pytest.fail("No credential access before pin confirmation"))
     result = runner.invoke(cli, args + ["setup"], input=answers(provider="keyring", pin=""))
@@ -205,8 +205,8 @@ def test_setup_without_pin_preserves_disabled_pending_registration(fresh_setup, 
 
 @pytest.mark.parametrize("availability", ["stored", "unavailable", "declined"])
 def test_setup_credential_prompt_is_hidden_and_no_plaintext_file(fresh_setup, monkeypatch, availability):
-    import mcp_locaweb_sftp.cli as module
-    from mcp_locaweb_sftp.credentials import CredentialError
+    import vhe_deploy.cli as module
+    from vhe_deploy.credentials import CredentialError
     runner, args, sites, _, answers = fresh_setup
     stored = []
     class Store:
@@ -244,9 +244,9 @@ def test_setup_invalid_site_saves_nothing(fresh_setup):
 
 
 def test_setup_age_metadata_and_deferred_password(fresh_setup, tmp_path, monkeypatch):
-    import mcp_locaweb_sftp.cli as module
-    from mcp_locaweb_sftp.config import load_settings
-    from mcp_locaweb_sftp.credentials import CredentialError
+    import vhe_deploy.cli as module
+    from vhe_deploy.config import load_settings
+    from vhe_deploy.credentials import CredentialError
     runner, args, sites, settings, answers = fresh_setup
     def unavailable(*args):
         raise CredentialError("pending identity")

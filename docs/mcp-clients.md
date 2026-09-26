@@ -4,13 +4,13 @@ Os exemplos abaixo seguem documentações oficiais consultadas em **26/09/2026**
 
 ## Preparação comum
 
-1. [Instale o pacote](install.md) e cadastre o site com `mcp-locaweb-sftp configurar` no terminal. Mantenha publicação desativada durante a configuração. O servidor MCP não pede senha nem confirma fingerprint em nome do usuário.
-2. Localize o comando instalado: PowerShell `(Get-Command mcp-locaweb-sftp-mcp).Source`; POSIX `command -v mcp-locaweb-sftp-mcp`. Em venv, é `.venv/Scripts/mcp-locaweb-sftp-mcp.exe` no Windows ou `.venv/bin/mcp-locaweb-sftp-mcp` em POSIX. Um binário extraído também serve; preserve sua pasta `_internal`.
+1. [Instale o pacote](install.md) e cadastre o site com `vhe-deploy configurar` no terminal. Mantenha publicação desativada durante a configuração. O servidor MCP não pede senha nem confirma fingerprint em nome do usuário.
+2. Localize o comando instalado: PowerShell `(Get-Command vhe-deploy-mcp).Source`; POSIX `command -v vhe-deploy-mcp`. Em venv, é `.venv/Scripts/vhe-deploy-mcp.exe` no Windows ou `.venv/bin/vhe-deploy-mcp` em POSIX. Um binário extraído também serve; preserve sua pasta `_internal`.
 3. Substitua **todos** os marcadores `/CAMINHO/...` do exemplo por caminhos absolutos reais do computador que executará o servidor. No Windows, use barras normais em JSON/TOML (`C:/...`), ou escape as invertidas. Não dependa de expansão de `~`, `$HOME`, `%USERPROFILE%` ou de ativação automática do venv pelo aplicativo.
 4. Use os mesmos `sites.yaml`, `settings.yaml` e `state` na CLI e em todos os clientes que devem compartilhar travas/tokens. Mantenha-os privados, fora de Git e da pasta enviada ao servidor. O cadastro YAML define a origem de cada site; o cliente não escolhe outra pasta de upload por chamada.
 5. Mescle somente a entrada indicada à configuração existente. Não substitua configurações inteiras, modelos ou outros servidores. Os exemplos não instalam nada nem alteram aplicativos automaticamente.
 
-O `command` é um executável, não uma linha de shell: cada opção ocupa seu próprio item em `args`. Use **`mcp-locaweb-sftp-mcp`**, não a CLI interativa `mcp-locaweb-sftp configurar`. Não use URL localhost: este servidor só oferece stdio, sem porta HTTP/SSE. [Docker via stdio](distribution.md#docker) exige `-i`, sem `-t`/modo destacado, e estado persistente.
+O `command` é um executável, não uma linha de shell: cada opção ocupa seu próprio item em `args`. Use **`vhe-deploy-mcp`**, não a CLI interativa `vhe-deploy configurar`. Não use URL localhost: este servidor só oferece stdio, sem porta HTTP/SSE. [Docker via stdio](distribution.md#docker) exige `-i`, sem `-t`/modo destacado, e estado persistente.
 
 Os arquivos de exemplo não contêm senhas. Prefira keyring/age adequadamente preparados. Um aplicativo gráfico pode não herdar variáveis do terminal; se escolher `env`, configure a injeção privada no processo que lança o cliente, sem gravar valores em JSON/YAML de exemplo ou no Git. O mesmo usuário/SO e suas permissões precisam permitir acesso ao cofre.
 
@@ -32,15 +32,15 @@ Use `MCP: Open User Configuration` para uma configuração pessoal e mescle [vsc
 
 ## Continue
 
-Mescle o fragmento [continue.example.yaml](clients/continue.example.yaml) ao seu `config.yaml`, preservando `name`, versão, modelos e demais opções existentes. `mcpServers` é uma **lista**; acrescente a entrada `name: locawebSftp`. O exemplo não constitui um agente completo. Use o modo de agente que disponibiliza ferramentas MCP. A configuração pessoal fica em `~/.continue/config.yaml` ou `%USERPROFILE%/.continue/config.yaml`. [Configuração oficial](https://docs.continue.dev/customize/deep-dives/configuration) · [Exemplos MCP oficiais](https://docs.continue.dev/customize/deep-dives/mcp-examples).
+Mescle o fragmento [continue.example.yaml](clients/continue.example.yaml) ao seu `config.yaml`, preservando `name`, versão, modelos e demais opções existentes. `mcpServers` é uma **lista**; acrescente a entrada `name: vheDeploy`. O exemplo não constitui um agente completo. Use o modo de agente que disponibiliza ferramentas MCP. A configuração pessoal fica em `~/.continue/config.yaml` ou `%USERPROFILE%/.continue/config.yaml`. [Configuração oficial](https://docs.continue.dev/customize/deep-dives/configuration) · [Exemplos MCP oficiais](https://docs.continue.dev/customize/deep-dives/mcp-examples).
 
 ## Codex
 
-Mescle [codex.example.toml](clients/codex.example.toml) em `~/.codex/config.toml`. O bloco é `[mcp_servers.locawebSftp]`, com `command` e `args`. O exemplo pede aprovação das ferramentas e define timeouts de inicialização/chamada; `tool_timeout_sec` não altera a validade de cinco minutos do token. Use `codex mcp list` para conferir o cadastro e o painel MCP do cliente para verificar conexão/ferramentas. Não confunda este servidor com a skill PowerShell legada. [Documentação oficial OpenAI](https://developers.openai.com/codex/mcp/).
+Mescle [codex.example.toml](clients/codex.example.toml) em `~/.codex/config.toml`. O bloco é `[mcp_servers.vheDeploy]`, com `command` e `args`. O exemplo pede aprovação das ferramentas e define timeouts de inicialização/chamada; `tool_timeout_sec` não altera a validade de cinco minutos do token. Use `codex mcp list` para conferir o cadastro e o painel MCP do cliente para verificar conexão/ferramentas. Não confunda este servidor com a skill PowerShell legada. [Documentação oficial OpenAI](https://developers.openai.com/codex/mcp/).
 
 ## Primeiro teste dentro do aplicativo
 
-Depois de configurar, solicite: “Use `locawebSftp` para listar os sites cadastrados. Não conecte nem envie arquivos.” A resposta deve vir de `list_sites`, que só lê metadados locais. Esta versão exige ao menos um cadastro: arquivo ausente ou catálogo `{}` retorna erro de configuração; prepare o primeiro site pelo assistente. Não execute `test_connection`, comparação, backup ou envio só para provar que o menu apareceu: essas ações acessam o servidor e devem corresponder ao pedido do usuário.
+Depois de configurar, solicite: “Use `vheDeploy` para listar os sites cadastrados. Não conecte nem envie arquivos.” A resposta deve vir de `list_sites`, que só lê metadados locais. Esta versão exige ao menos um cadastro: arquivo ausente ou catálogo `{}` retorna erro de configuração; prepare o primeiro site pelo assistente. Não execute `test_connection`, comparação, backup ou envio só para provar que o menu apareceu: essas ações acessam o servidor e devem corresponder ao pedido do usuário.
 
 Confira a descoberta das sete ferramentas: `list_sites`, `test_connection`, `compare_site`, `preview_deploy`, `backup_site`, `deploy_site` e `register_site`. Para registrar a homologação de um aplicativo, anote versão do cliente/SO, versão/commit do servidor, teste realizado e resultado, sem publicar cadastro ou credencial. Configuração parseável e conexão pelo SDK não comprovam integração no aplicativo.
 

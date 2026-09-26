@@ -1,7 +1,7 @@
 # Fragmento: mescle ao config.yaml existente, preservando modelos e demais opções.
 mcpServers:
-  - name: locawebSftp
-    command: /CAMINHO/ABSOLUTO/mcp-locaweb-sftp-mcp
+  - name: vheDeploy
+    command: /CAMINHO/ABSOLUTO/vhe-deploy-mcp
     args:
       - --sites
       - /CAMINHO/PRIVADO/sites.yaml

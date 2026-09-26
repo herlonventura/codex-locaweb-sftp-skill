@@ -1,6 +1,6 @@
 import pytest
 
-from mcp_locaweb_sftp.core.guards import (
+from vhe_deploy.core.guards import (
     is_blocked_path,
     normalize_domain,
     require_registered_domain,
@@ -61,6 +61,7 @@ def test_paths_cannot_escape_or_alias_a_file_on_another_os(path):
     "a/b/cert.pem", ".git/config", "a/.git/HEAD", "backups/site.zip", "a/backups/x",
     "config.php", "web.config", ".htaccess", "logs/run.txt", "a/node_modules/lib.js",
     ".htpasswd", "id_ed25519", "README.bak", "script.ps1", ".git",
+    ".vhe-deploy/data.txt", ".mcp-locaweb-sftp/data.txt",
 ])
 def test_baseline_sensitive_paths_are_blocked_at_any_depth(path):
     assert is_blocked_path(path)

@@ -28,13 +28,13 @@ Não escolha a pasta `public_html` como origem/destino da configuração. Manten
 Exemplo PowerShell com diretório pai existente, escolhendo um nome novo:
 
 ```powershell
-mcp-locaweb-sftp migrate --from "$env:USERPROFILE\.codex\skills\mcplocaweb" --to "$env:USERPROFILE\locaweb-python-migrado"
+vhe-deploy migrate --from "$env:USERPROFILE\.codex\skills\mcplocaweb" --to "$env:USERPROFILE\locaweb-python-migrado"
 ```
 
 Exemplo POSIX, usando uma cópia privada dos metadados da origem:
 
 ```sh
-mcp-locaweb-sftp migrate --from "$HOME/skill-antiga" --to "$HOME/locaweb-python-migrado" --local-root "exemplo.com.br=$HOME/sites/exemplo.com.br/public_html"
+vhe-deploy migrate --from "$HOME/skill-antiga" --to "$HOME/locaweb-python-migrado" --local-root "exemplo.com.br=$HOME/sites/exemplo.com.br/public_html"
 ```
 
 `--from` **e** `--to` são obrigatórios. Repita `--local-root "dominio=caminho-absoluto"` para cada domínio cujo caminho mudou. O domínio precisa existir na origem; duplicatas e nomes desconhecidos são recusados. Não há conversão automática de `C:/...` para `/home/...`. Se não mudar de SO/caminho, omita esse argumento.
@@ -48,14 +48,14 @@ Use explicitamente o destino novo em **todas** as chamadas seguintes. Exemplo Po
 ```powershell
 $cadastroMigrado = "$env:USERPROFILE\locaweb-python-migrado"
 $opcoesLocaweb = @('--sites', "$cadastroMigrado\sites.yaml", '--settings', "$cadastroMigrado\settings.yaml", '--state-dir', "$cadastroMigrado\state")
-mcp-locaweb-sftp @opcoesLocaweb list
-mcp-locaweb-sftp @opcoesLocaweb info exemplo.com.br
+vhe-deploy @opcoesLocaweb list
+vhe-deploy @opcoesLocaweb info exemplo.com.br
 ```
 
 1. Confira domínio, host, porta, usuário, pasta local e raiz remota. Uma pasta duplicada `public_html/public_html` não é corrigida automaticamente.
 2. Confirme a fingerprint SFTP com o provedor. Se houver pendência, use `scan-key`, confira independentemente e só então `set-key ... --confirm`, sempre com as opções de caminho acima. Para FTPS, confira certificado/CA; não existe modo TLS inseguro.
 3. Escolha `credential_store` por site. A migração usa o padrão keyring; age/ambiente devem ser configurados explicitamente. Mudanças de identidade da conexão alteram o vínculo da credencial: termine essa revisão antes do recadastro.
-4. Execute `mcp-locaweb-sftp @opcoesLocaweb credential exemplo.com.br`. A senha é digitada no terminal oculto; não a exporte do DPAPI para texto.
+4. Execute `vhe-deploy @opcoesLocaweb credential exemplo.com.br`. A senha é digitada no terminal oculto; não a exporte do DPAPI para texto.
 5. Quando autorizar a conexão, execute `test` e `compare` com as mesmas opções e o domínio. Ambos acessam o servidor, mas não publicam arquivos.
 6. Aponte o cliente MCP para os mesmos arquivos e a mesma pasta de estado. Publicação continua desativada até o opt-in explícito descrito na [CLI](cli.md#publicar-uma-prévia-revisada).
 

@@ -6,9 +6,9 @@ import ssl
 import paramiko
 import pytest
 
-from mcp_locaweb_sftp.backends import FTPSBackend, IntegrityError, RemoteEntry, SFTPBackend, UnsafeRemotePath
-from mcp_locaweb_sftp.backends.base import validate_connection
-from mcp_locaweb_sftp.core.checksum import sha256_bytes
+from vhe_deploy.backends import FTPSBackend, IntegrityError, RemoteEntry, SFTPBackend, UnsafeRemotePath
+from vhe_deploy.backends.base import validate_connection
+from vhe_deploy.core.checksum import sha256_bytes
 
 
 def test_real_roundtrip_inventory_and_nested_directories(backend):
@@ -314,6 +314,6 @@ def test_root_directory_itself_is_supported(sftp_server):
 @pytest.mark.parametrize("entry", [RemoteEntry("file"), RemoteEntry("file", -1, 0),
                                    RemoteEntry("file", 1, float("nan")), RemoteEntry("unsafe")])
 def test_invalid_file_metadata_fails_closed(entry):
-    from mcp_locaweb_sftp.backends.base import Backend
+    from vhe_deploy.backends.base import Backend
     with pytest.raises(UnsafeRemotePath):
         Backend._regular(entry)

@@ -5,9 +5,9 @@ import os
 from pathlib import Path
 import sys
 
-from mcp_locaweb_sftp.backends.ftps import FTPSBackend
-from mcp_locaweb_sftp.backends.sftp import SFTPBackend
-from mcp_locaweb_sftp.operations import Runtime
+from vhe_deploy.backends.ftps import FTPSBackend
+from vhe_deploy.backends.sftp import SFTPBackend
+from vhe_deploy.operations import Runtime
 
 
 def main():

@@ -10,10 +10,10 @@ Dentro de um ambiente virtual, a partir da raiz do repositório:
 
 ```text
 python -m pip install -r requirements-dev.txt
-python -m pytest -q --cov=mcp_locaweb_sftp --cov-branch --cov-report=term-missing --cov-fail-under=81
+python -m pytest -q --cov=vhe_deploy --cov-branch --cov-report=term-missing --cov-fail-under=81
 ```
 
-Para incluir criptografia age real, instale `age` e `age-keygen` de fonte confiável no mesmo diretório. Coloque `age` no PATH ou configure `MCP_LOCAWEB_TEST_AGE` com seu caminho absoluto. Sem isso, os testes age ficam **skipped**; não conte essa execução como validação criptográfica completa. O cofre nativo continua simulado para não gravar senhas no perfil do usuário.
+Para incluir criptografia age real, instale `age` e `age-keygen` de fonte confiável no mesmo diretório. Coloque `age` no PATH ou configure `VHE_DEPLOY_TEST_AGE` com seu caminho absoluto. Sem isso, os testes age ficam **skipped**; não conte essa execução como validação criptográfica completa. O cofre nativo continua simulado para não gravar senhas no perfil do usuário.
 
 No Windows, o teste legado é independente:
 

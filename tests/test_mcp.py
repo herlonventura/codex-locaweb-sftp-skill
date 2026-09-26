@@ -7,8 +7,8 @@ import anyio
 from mcp import Client, StdioServerParameters
 import pytest
 
-from mcp_locaweb_sftp.config import load_sites
-from mcp_locaweb_sftp.mcp_server import TOOL_DEFINITIONS, create_server
+from vhe_deploy.config import load_sites
+from vhe_deploy.mcp_server import TOOL_DEFINITIONS, create_server
 
 
 def data(result, status="success"):
@@ -22,9 +22,10 @@ def data(result, status="success"):
 async def test_official_stdio_client_discovers_and_executes_verified_deploy(site_runtime):
     runtime, server, local, site, environment = site_runtime
     environment.update(PYTHONPATH=str(Path("src").resolve()), PYTHONIOENCODING="utf-8")
-    params = StdioServerParameters(command=sys.executable, args=["-m", "mcp_locaweb_sftp.mcp_server",
+    params = StdioServerParameters(command=sys.executable, args=["-m", "vhe_deploy.mcp_server",
         "--sites", str(runtime.sites_file), "--settings", str(runtime.settings_file), "--state-dir", str(runtime.state)], env=environment)
     async with Client(params, read_timeout_seconds=30) as client:
+        assert client.server_info is not None and client.server_info.name == 'vhe-deploy'
         tools = {tool.name: tool for tool in (await client.list_tools()).tools}
         assert set(tools) == set(TOOL_DEFINITIONS)
         assert tools["deploy_site"].annotations.destructive_hint is True
@@ -110,7 +111,7 @@ async def test_mcp_changed_preview_is_consumed_and_cannot_be_reused(site_runtime
 
 @pytest.mark.anyio
 async def test_mcp_deploy_requires_confirmation_and_opt_in_before_connection(site_runtime, monkeypatch):
-    import mcp_locaweb_sftp.operations as module
+    import vhe_deploy.operations as module
     runtime, *_ = site_runtime
     async with Client(create_server(runtime)) as client:
         preview = data(await client.call_tool("preview_deploy", {"domain": "example.com"}))
@@ -126,8 +127,8 @@ async def test_mcp_deploy_requires_confirmation_and_opt_in_before_connection(sit
 
 @pytest.mark.anyio
 async def test_mcp_partial_failure_preserves_journal_and_does_not_echo_exception(site_runtime, monkeypatch):
-    from mcp_locaweb_sftp.backends.sftp import SFTPBackend
-    from mcp_locaweb_sftp.backends.ftps import FTPSBackend
+    from vhe_deploy.backends.sftp import SFTPBackend
+    from vhe_deploy.backends.ftps import FTPSBackend
     runtime, server, _, site, _ = site_runtime
     def interrupted(*args):
         (server.storage / "site/index.html").write_bytes(b"partial")
@@ -145,15 +146,15 @@ async def test_mcp_partial_failure_preserves_journal_and_does_not_echo_exception
 
 @pytest.mark.anyio
 async def test_token_expires_during_backup_before_any_upload(site_runtime, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
-    from mcp_locaweb_sftp.core.tokens import TokenError
+    import vhe_deploy.core.deploy as module
+    from vhe_deploy.core.tokens import TokenError
     runtime, server, *_ = site_runtime
     original = module.backup_files
     def slow_backup(*args):
         files = original(*args)
         def expired(self):
             raise TokenError()
-        monkeypatch.setattr("mcp_locaweb_sftp.core.tokens.PreviewLease.require_fresh", expired)
+        monkeypatch.setattr("vhe_deploy.core.tokens.PreviewLease.require_fresh", expired)
         return files
     monkeypatch.setattr(module, "backup_files", slow_backup)
     async with Client(create_server(runtime)) as client:
@@ -167,8 +168,8 @@ async def test_token_expires_during_backup_before_any_upload(site_runtime, monke
 
 @pytest.mark.anyio
 async def test_mcp_cancel_does_not_release_lock_while_worker_can_still_write(site_runtime, monkeypatch):
-    import mcp_locaweb_sftp.core.deploy as module
-    import mcp_locaweb_sftp.operations as operations
+    import vhe_deploy.core.deploy as module
+    import vhe_deploy.operations as operations
     runtime, server, *_ = site_runtime
     entered, release, finished = threading.Event(), threading.Event(), threading.Event()
     original_backup, original_deploy = module.backup_files, operations.deploy
@@ -213,9 +214,9 @@ async def test_mcp_cancel_does_not_release_lock_while_worker_can_still_write(sit
 
 @pytest.mark.anyio
 async def test_mcp_unavailable_keyring_never_falls_back_to_environment(site_runtime, monkeypatch):
-    import mcp_locaweb_sftp.credentials.keyring_store as keyring
-    from mcp_locaweb_sftp.credentials.env_store import EnvStore
-    from mcp_locaweb_sftp.config import Site
+    import vhe_deploy.credentials.keyring_store as keyring
+    from vhe_deploy.credentials.env_store import EnvStore
+    from vhe_deploy.config import Site
     runtime, _, _, site, _ = site_runtime
     with runtime.edit_registry() as sites:
         sites["example.com"] = Site(**(site.model_dump() | {"credential_store": "keyring"}))

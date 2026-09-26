@@ -6,7 +6,7 @@ from pydantic import SecretStr
 
 from .base import CredentialError, CredentialKey, decode_secret, encode_secret
 
-SERVICE = "mcp-locaweb-sftp/v1"
+SERVICE = "vhe-deploy/v1"
 
 
 def _native_backend():

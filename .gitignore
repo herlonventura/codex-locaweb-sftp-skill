@@ -46,6 +46,7 @@ deploy-result.json
 backup-result.json
 backup-manifest.json
 .mcp-locaweb-sftp/
+.vhe-deploy/
 /state/
 preview-tokens/
 receipts.sqlite3*

@@ -1,6 +1,6 @@
 # CLI Python — cadastro, prévia, backup e envio
 
-A CLI funciona a partir do código-fonte, pacote instalado ou binário. Não depende do FileZilla, WinSCP ou de dados já salvos no computador. A skill PowerShell existente mantém seu funcionamento anterior; ainda não foi trocada por esta CLI. A etapa 5 acrescentou o [servidor MCP](mcp-setup.md) e o token efêmero obrigatório também na CLI. Para instalar com pip/pipx e usar `mcp-locaweb-sftp configurar`, veja [distribuição](distribution.md).
+A CLI funciona a partir do código-fonte, pacote instalado ou binário. Não depende do FileZilla, WinSCP ou de dados já salvos no computador. A skill PowerShell existente mantém seu funcionamento anterior; ainda não foi trocada por esta CLI. A etapa 5 acrescentou o [servidor MCP](mcp-setup.md) e o token efêmero obrigatório também na CLI. Para instalar com pip/pipx e usar `vhe-deploy configurar`, veja [distribuição](distribution.md).
 
 ## Executar a partir do repositório
 
@@ -9,8 +9,8 @@ Requer Python 3.11+ e as dependências de `requirements.txt`. A matriz da etapa 
 ```powershell
 python -m pip install -r requirements.txt
 $env:PYTHONPATH = 'src'
-python -m mcp_locaweb_sftp --help
-python -m mcp_locaweb_sftp configurar
+python -m vhe_deploy --help
+python -m vhe_deploy configurar
 ```
 
 Em um terminal POSIX, o equivalente para carregar o código-fonte é `export PYTHONPATH=src`. Depois de instalar o pacote com pip/pipx, não é necessário definir `PYTHONPATH`; o comando instalado aceita as mesmas opções e aliases mostrados abaixo.
@@ -27,17 +27,17 @@ Em um terminal POSIX, o equivalente para carregar o código-fonte é `export PYT
 6. Para SFTP, fingerprint SHA256 conferida com o provedor. Enter deixa a confirmação pendente.
 7. Para keyring/age, opção de cadastrar a senha em prompt local oculto, com confirmação. A senha não deve ser digitada no chat, em argumento de comando, YAML ou documentação.
 
-Cada domínio é independente, mesmo que compartilhe o servidor. Não há busca/importação automática de senhas do FileZilla. Por padrão, a configuração fica em `~/.mcp-locaweb-sftp/sites.yaml` e `settings.yaml`, fora do repositório e da pasta publicada. `--sites`, `--settings` e `--state-dir` são opções globais, antes do comando, para instalações com caminhos próprios.
+Cada domínio é independente, mesmo que compartilhe o servidor. Não há busca/importação automática de senhas do FileZilla. Por padrão, a configuração fica em `~/.vhe-deploy/sites.yaml` e `settings.yaml`, fora do repositório e da pasta publicada. `--sites`, `--settings` e `--state-dir` são opções globais, antes do comando, para instalações com caminhos próprios.
 
 O assistente cria o site com `publish_enabled: false`, não testa conexão e não envia arquivos. Configurações globais existentes são preservadas; uma configuração nova também começa com publicação desativada. Um domínio já cadastrado não é sobrescrito.
 
 No SFTP sem fingerprint confirmada, não se pede a senha ainda. Depois:
 
 ```text
-python -m mcp_locaweb_sftp scan-key exemplo.com.br
-python -m mcp_locaweb_sftp set-key exemplo.com.br --fingerprint SHA256:CHAVE_CONFIRMADA --confirm
-python -m mcp_locaweb_sftp credential exemplo.com.br
-python -m mcp_locaweb_sftp testar exemplo.com.br
+python -m vhe_deploy scan-key exemplo.com.br
+python -m vhe_deploy set-key exemplo.com.br --fingerprint SHA256:CHAVE_CONFIRMADA --confirm
+python -m vhe_deploy credential exemplo.com.br
+python -m vhe_deploy testar exemplo.com.br
 ```
 
 `scan-key` só consulta a chave observada, sem autenticar ou confiar nela. Confira-a por canal independente antes de `set-key`; o exemplo acima usa um marcador, não uma fingerprint válida. `testar` autentica e verifica a raiz, sem publicar.
@@ -70,8 +70,8 @@ Saídas operacionais são JSON em stdout. Perguntas ficam em stderr; ajuda é te
 Depois de concluir e testar o cadastro, habilite explicitamente `publish_enabled: true` no site e em `settings.yaml`. Faça isso antes de gerar a prévia, pois a configuração participa do hash. Para FTPS, também é necessário `ftps_write_preconditions_confirmed: true`, somente após confirmar confinamento da conta e ausência de escritores concorrentes no servidor. Essa flag é uma declaração administrativa, não uma prova técnica dessas condições.
 
 ```text
-python -m mcp_locaweb_sftp previa exemplo.com.br
-python -m mcp_locaweb_sftp enviar exemplo.com.br --preview-hash HASH_DA_PREVIA_REVISADA --preview-token TOKEN_DA_PREVIA --confirm
+python -m vhe_deploy previa exemplo.com.br
+python -m vhe_deploy enviar exemplo.com.br --preview-hash HASH_DA_PREVIA_REVISADA --preview-token TOKEN_DA_PREVIA --confirm
 ```
 
 O hash SHA-256 vincula a prévia ao domínio, configuração, caminhos, inventários e hashes/datas dos arquivos. O token aleatório adicional é exigido no envio, vale por **300 segundos** e só pode ser consumido uma vez, inclusive entre processos. Não o grave no Git, scripts ou logs. Em uso interativo, prefira passar o valor por variável temporária do terminal; ele continua podendo ser observado por processos locais autorizados. Nenhuma senha deve ser passada por argumento.
@@ -93,7 +93,7 @@ Não há exclusão remota, remoção de arquivo parcial nem rollback automático
 
 ## Registros e recuperação
 
-Por padrão, cada execução fica em `~/.mcp-locaweb-sftp/state/runs/DOMINIO/ID/`, separada da pasta publicada:
+Por padrão, cada execução fica em `~/.vhe-deploy/state/runs/DOMINIO/ID/`, separada da pasta publicada:
 
 - `deploy-result.json`: plano, fase, arquivo ativo, diretórios criados e arquivos com upload verificado.
 - `sources/`: snapshot das versões locais enviadas.

@@ -206,7 +206,7 @@ def ftps_server(tmp_path):
 
 @pytest.fixture(params=["sftp", "ftps"])
 def backend(request):
-    from mcp_locaweb_sftp.backends import FTPSBackend, SFTPBackend
+    from vhe_deploy.backends import FTPSBackend, SFTPBackend
     server = request.getfixturevalue(request.param + "_server")
     cls = SFTPBackend if request.param == "sftp" else FTPSBackend
     with cls(**server.options) as connection:
@@ -222,9 +222,9 @@ def anyio_backend():
 def site_runtime(request, tmp_path, monkeypatch):
     from pathlib import Path
     import yaml
-    from mcp_locaweb_sftp.config import Settings, Site
-    from mcp_locaweb_sftp.credentials import CredentialKey
-    from mcp_locaweb_sftp.operations import Runtime
+    from vhe_deploy.config import Settings, Site
+    from vhe_deploy.credentials import CredentialKey
+    from vhe_deploy.operations import Runtime
     protocol = request.param
     server = request.getfixturevalue(protocol + "_server")
     options = server.options

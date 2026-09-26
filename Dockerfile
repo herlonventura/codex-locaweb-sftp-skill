@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 app
 COPY --from=builder /wheels /wheels
-RUN python -m pip install --no-cache-dir --no-index --find-links=/wheels mcp-locaweb-sftp \
+RUN python -m pip install --no-cache-dir --no-index --find-links=/wheels vhe-deploy \
     && rm -rf /wheels
 USER app
 WORKDIR /home/app
-ENTRYPOINT ["mcp-locaweb-sftp-mcp"]
+ENTRYPOINT ["vhe-deploy-mcp"]

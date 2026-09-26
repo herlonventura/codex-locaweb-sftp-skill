@@ -9,12 +9,12 @@ import traceback
 from pydantic import SecretStr
 import pytest
 
-from mcp_locaweb_sftp.config import Settings, Site, load_sites
-from mcp_locaweb_sftp.config.migration import migrate_legacy
-from mcp_locaweb_sftp.connection import open_site
-from mcp_locaweb_sftp.credentials import AgeStore, CredentialError, CredentialKey, EnvStore, KeyringStore
-from mcp_locaweb_sftp.credentials.base import decode_secret, encode_secret
-from mcp_locaweb_sftp.credentials.factory import selected_store
+from vhe_deploy.config import Settings, Site, load_sites
+from vhe_deploy.config.migration import migrate_legacy
+from vhe_deploy.connection import open_site
+from vhe_deploy.credentials import AgeStore, CredentialError, CredentialKey, EnvStore, KeyringStore
+from vhe_deploy.credentials.base import decode_secret, encode_secret
+from vhe_deploy.credentials.factory import selected_store
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def key():
 
 @pytest.fixture
 def fake_keyring(monkeypatch):
-    import mcp_locaweb_sftp.credentials.keyring_store as module
+    import vhe_deploy.credentials.keyring_store as module
     class MemoryVault:
         priority = 1
         values = {}
@@ -40,7 +40,7 @@ def fake_keyring(monkeypatch):
 
 @pytest.fixture
 def age_setup(tmp_path):
-    executable = os.environ.get("MCP_LOCAWEB_TEST_AGE") or shutil.which("age")
+    executable = os.environ.get("VHE_DEPLOY_TEST_AGE") or shutil.which("age")
     if executable is None:
         pytest.skip("Real age executable not installed/configured for this test run")
     executable = Path(executable).resolve()
@@ -69,7 +69,7 @@ def test_binding_changes_for_connection_identity_but_not_local_layout():
 
 
 def test_environment_is_explicit_bound_and_read_only(key, monkeypatch):
-    monkeypatch.setenv("MCP_LOCAWEB_PASSWORD", "do-not-use-global-secret")
+    monkeypatch.setenv("VHE_DEPLOY_PASSWORD", "do-not-use-global-secret")
     monkeypatch.delenv(key.env_name, raising=False)
     with pytest.raises(CredentialError):
         EnvStore().get(key)
@@ -82,7 +82,7 @@ def test_environment_is_explicit_bound_and_read_only(key, monkeypatch):
 
 @pytest.mark.parametrize("value", ["", "x\ny", "x\ry", "x\x00y", pytest.param("x" * 16385, id="oversized-secret")])
 def test_invalid_secret_is_rejected(value):
-    from mcp_locaweb_sftp.credentials.base import secret
+    from vhe_deploy.credentials.base import secret
     with pytest.raises(CredentialError):
         secret(value)
 
@@ -112,7 +112,7 @@ def test_keyring_errors_do_not_fall_back_or_leak(fake_keyring, key, monkeypatch)
 
 
 def test_unavailable_vault_fails_closed(monkeypatch):
-    import mcp_locaweb_sftp.credentials.keyring_store as module
+    import vhe_deploy.credentials.keyring_store as module
     def unavailable():
         raise ImportError("not installed")
     monkeypatch.setattr(module, "_native_backend", unavailable)
@@ -282,7 +282,7 @@ def test_native_keyring_selection_ignores_configured_plaintext_plugin(fake_keyri
 
 
 def test_age_invalid_identity_and_disk_error_are_sanitized(age_setup, key, monkeypatch):
-    import mcp_locaweb_sftp.credentials.age_store as module
+    import vhe_deploy.credentials.age_store as module
     store = AgeStore(**age_setup)
     def failing(*args, **kwargs):
         raise OSError("simulated private path or value")

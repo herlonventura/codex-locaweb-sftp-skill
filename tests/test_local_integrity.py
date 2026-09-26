@@ -3,8 +3,8 @@ import os
 
 import pytest
 
-from mcp_locaweb_sftp.backends.base import IntegrityError
-from mcp_locaweb_sftp.core.local import read_local, snapshot_local
+from vhe_deploy.backends.base import IntegrityError
+from vhe_deploy.core.local import read_local, snapshot_local
 
 
 def test_source_changed_after_preview_cannot_be_snapshotted_as_approved(tmp_path):
