@@ -1,8 +1,8 @@
-# Migração para Python e MCP — plano e etapas 1–5
+# Migração para Python e MCP — plano e etapas 1–6
 
 ## Estado
 
-Etapas 1–5 implementadas em 26/09/2026. As etapas 6–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O código Python contém núcleo, transportes, configuração, provedores de credenciais, migração, CLI e servidor MCP real via stdio com SDK oficial. Não há pacote publicado no PyPI. Os números nas seções de cada etapa são evidências históricas daquela entrega.
+Etapas 1–6 concluídas em 26/09/2026. As etapas 7–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O código Python contém núcleo, transportes, configuração, provedores de credenciais, migração, CLI e servidor MCP real via stdio com SDK oficial. Não há pacote publicado no PyPI. Os números nas seções de cada etapa são evidências históricas daquela entrega.
 
 O alvo é Python 3.11+. A execução local foi verificada em Windows com Python 3.14.3. Usar somente funções da biblioteca padrão no núcleo evita dependências de WinSCP, DPAPI e comandos de sistema, mas não comprova por si só execução em Linux/macOS; essa verificação pertence à matriz de testes futura.
 
@@ -101,6 +101,14 @@ O cliente continua responsável por obter autorização explícita do usuário; 
 
 Validação local: **443 testes aprovados, sem skips com age disponível; 94,16% de cobertura combinada de instruções e ramos**. Inclui cliente SDK real → processo stdio → SFTP/FTPS local; descoberta das ferramentas; prévia/backup/envio verificado; respostas de conflito e falha parcial; rejeição de valores sensíveis em argumentos; duas tentativas em processos distintos com um único consumo; fronteira de 300 segundos, mudanças de relógio, erro de disco e vencimento após backup sem upload. O teste PowerShell legado, `pip check` e a gramática Python 3.11 passaram. Ambiente Windows/Python 3.14.3; mcp/mcp-types 2.2.0, anyio 4.15.1. Os testes stdio em subprocesso passaram, mas sua execução não está somada à cobertura do processo principal. Nenhum site real foi acessado e nenhum segredo real foi cadastrado. Cofre nativo simulado; age real. Integrações nos aplicativos e execução multi-SO seguem pendentes.
 
+## Etapa 6: testes ampliados de falha e recuperação
+
+Acrescentados 24 cenários, incluindo encerramento abrupto de processo filho após escrita parcial real em SFTP/FTPS local; confirmação de backup intacto, diário de intenção, token consumido e trava residual; retomada com conflito; dois domínios no mesmo endpoint disputando publicação; falha no último backup antes de qualquer upload; código 4 na CLI; cancelamento cooperativo MCP sem liberação prematura da trava; isolamento de credenciais e ausência de fallback; corrupção/perda/hardlink do banco de tokens; mudanças e escritas incompletas durante snapshot local.
+
+Os cenários passaram sem exigir mudanças no código de produção. A fixture de cadastro fictício foi compartilhada entre os testes de aplicação e MCP. O teste de encerramento recusa host fora de loopback; não há uso dos cadastros reais. O cancelamento cooperativo não desfaz a publicação: o worker pode concluir e gravar o resultado depois que o cliente cancela sua chamada. A interrupção forçada preserva a pendência para revisão manual. [Matriz, comandos de teste e evidência de recuperação](testing.md).
+
+Validação local: **467 testes aprovados, sem skips com age disponível; 94,77% de cobertura combinada de instruções e ramos**. Windows/Python 3.14.3, mcp/mcp-types 2.2.0, anyio 4.15.1 e age 1.3.2. O teste PowerShell legado, `pip check` e análise de sintaxe pela gramática Python 3.11 passaram. Subprocessos possuem asserções próprias e não entram na cobertura do processo principal. Cofre nativo simulado, age executado de fato, nenhuma hospedagem real acessada. Não é teste de corte de energia nem de outras máquinas escrevendo no servidor. Linux/macOS e aplicativos MCP específicos continuam pendentes para as etapas seguintes.
+
 ## Sequência aceita
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.
@@ -108,7 +116,7 @@ Validação local: **443 testes aprovados, sem skips com age disponível; 94,16%
 3. **Credenciais, configuração e execução da migração — concluído.** Keyring, age e ambiente; YAML validado, JSON legado e migração de cadastros testada em cópia isolada. Senhas DPAPI permanecem intocadas e exigem recadastro; nenhum segredo é exportado em claro. A etapa 4 expõe essa lógica pela CLI.
 4. **CLI — concluída.** Operações e aliases em português, cadastro interativo e `migrate`, reutilizando a lógica testada. Opt-in de publicação, prévia vinculada por hash, bloqueio de conflitos, backup verificado, verificação pós-upload e registros de falhas parciais. Nenhuma exclusão remota. Evidências e limitações acima.
 5. **MCP e token de prévia — concluída.** SDK oficial com stdio, sete ferramentas e token emitido por prévia sem bloqueios, vinculado ao hash, válido por 5 minutos e obrigatório no deploy Python/MCP. Consumo único entre processos; prévia alterada bloqueia o envio. Confirmação explícita e `publish_enabled` continuam necessários. Evidências e limites acima.
-6. **Testes ampliados.** Complementar os testes já presentes desde a etapa 1 e o servidor simulado da etapa 2. Cobrir concorrência, backups, falha parcial, credenciais, CLI/MCP e expiração/vínculo/reutilização do token. Exigir cobertura maior que 80% e apresentar limitações verificadas.
+6. **Testes ampliados — concluída.** Suíte de 467 testes, 94,77% de cobertura local, com evidências de concorrência, backup, interrupção, recuperação, credenciais, CLI/MCP e tokens. Limites de ambiente e recuperação documentados acima; sem alterações no código de produção nesta etapa.
 7. **Empacotamento e CI.** Preparar pyproject, Docker, pip/pipx e binários por sistema. A matriz deve tentar Linux, macOS e Windows. A etapa pode avançar com **CI verde em pelo menos 2 sistemas**; se o terceiro falhar, abrir issue com evidências e indicar claramente que ele continua pendente. Não afirmar disponibilidade no PyPI nem suporte executado que não tenha sido confirmado.
 8. **Documentação.** README honesto, configuração MCP para os clientes e **somente documentação da migração**, cuja implementação e execução de teste já pertencem à etapa 3. Registrar plataformas comprovadas, limitações, requisitos de credenciais e recuperação de falha parcial. Não repetir ou executar a migração de produção nesta etapa.
 

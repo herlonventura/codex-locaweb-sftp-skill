@@ -211,3 +211,38 @@ def backend(request):
     cls = SFTPBackend if request.param == "sftp" else FTPSBackend
     with cls(**server.options) as connection:
         yield connection, server
+
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.fixture(params=["sftp", "ftps"])
+def site_runtime(request, tmp_path, monkeypatch):
+    from pathlib import Path
+    import yaml
+    from mcp_locaweb_sftp.config import Settings, Site
+    from mcp_locaweb_sftp.credentials import CredentialKey
+    from mcp_locaweb_sftp.operations import Runtime
+    protocol = request.param
+    server = request.getfixturevalue(protocol + "_server")
+    options = server.options
+    local = tmp_path / "public_html"
+    local.mkdir()
+    site = Site(protocol=protocol, host=options["host"], port=options["port"], user=options["username"],
+        local_root=local.as_posix(), remote_root="/site", publish_enabled=True, ftps_write_preconditions_confirmed=True,
+        credential_store="env", ssh_fingerprint=options.get("fingerprint"),
+        ca_file=Path(options["ca_file"]).as_posix() if "ca_file" in options else None)
+    sites, settings = tmp_path / "sites.yaml", tmp_path / "settings.yaml"
+    sites.write_text(yaml.safe_dump({"example.com": site.model_dump(mode="json")}), encoding="utf-8")
+    settings.write_text(yaml.safe_dump(Settings(publish_enabled=True).model_dump(mode="json")), encoding="utf-8")
+    environment = {CredentialKey.for_site("example.com", site).env_name: options["password"]}
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+    (server.storage / "site/index.html").write_bytes(b"old remote content")
+    (server.storage / "site/keep.txt").write_bytes(b"preserve")
+    (local / "index.html").write_bytes(b"new")
+    os.utime(server.storage / "site/index.html", (1700000000, 1700000000))
+    os.utime(local / "index.html", (1700000010, 1700000010))
+    return Runtime(sites, settings, tmp_path / "state"), server, local, site, environment

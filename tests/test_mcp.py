@@ -1,46 +1,14 @@
 import json
-import os
 from pathlib import Path
 import sys
+import threading
 
+import anyio
 from mcp import Client, StdioServerParameters
 import pytest
-import yaml
 
-from mcp_locaweb_sftp.config import Settings, Site, load_sites
-from mcp_locaweb_sftp.credentials import CredentialKey
+from mcp_locaweb_sftp.config import load_sites
 from mcp_locaweb_sftp.mcp_server import TOOL_DEFINITIONS, create_server
-from mcp_locaweb_sftp.operations import Runtime
-
-
-@pytest.fixture
-def anyio_backend():
-    return "asyncio"
-
-
-@pytest.fixture(params=["sftp", "ftps"])
-def mcp_environment(request, tmp_path, monkeypatch):
-    protocol = request.param
-    server = request.getfixturevalue(protocol + "_server")
-    options = server.options
-    local = tmp_path / "public_html"
-    local.mkdir()
-    site = Site(protocol=protocol, host=options["host"], port=options["port"], user=options["username"],
-        local_root=local.as_posix(), remote_root="/site", publish_enabled=True, ftps_write_preconditions_confirmed=True,
-        credential_store="env", ssh_fingerprint=options.get("fingerprint"),
-        ca_file=Path(options["ca_file"]).as_posix() if "ca_file" in options else None)
-    sites, settings = tmp_path / "sites.yaml", tmp_path / "settings.yaml"
-    sites.write_text(yaml.safe_dump({"example.com": site.model_dump(mode="json")}), encoding="utf-8")
-    settings.write_text(yaml.safe_dump(Settings(publish_enabled=True).model_dump(mode="json")), encoding="utf-8")
-    environment = {CredentialKey.for_site("example.com", site).env_name: options["password"]}
-    for name, value in environment.items():
-        monkeypatch.setenv(name, value)
-    (server.storage / "site/index.html").write_bytes(b"old remote content")
-    (server.storage / "site/keep.txt").write_bytes(b"preserve")
-    (local / "index.html").write_bytes(b"new")
-    os.utime(server.storage / "site/index.html", (1700000000, 1700000000))
-    os.utime(local / "index.html", (1700000010, 1700000010))
-    return Runtime(sites, settings, tmp_path / "state"), server, local, site, environment
 
 
 def data(result, status="success"):
@@ -51,8 +19,8 @@ def data(result, status="success"):
 
 
 @pytest.mark.anyio
-async def test_official_stdio_client_discovers_and_executes_verified_deploy(mcp_environment):
-    runtime, server, local, site, environment = mcp_environment
+async def test_official_stdio_client_discovers_and_executes_verified_deploy(site_runtime):
+    runtime, server, local, site, environment = site_runtime
     environment.update(PYTHONPATH=str(Path("src").resolve()), PYTHONIOENCODING="utf-8")
     params = StdioServerParameters(command=sys.executable, args=["-m", "mcp_locaweb_sftp.mcp_server",
         "--sites", str(runtime.sites_file), "--settings", str(runtime.settings_file), "--state-dir", str(runtime.state)], env=environment)
@@ -83,8 +51,8 @@ async def test_official_stdio_client_discovers_and_executes_verified_deploy(mcp_
 
 
 @pytest.mark.anyio
-async def test_mcp_strict_arguments_and_errors_do_not_echo_secrets(mcp_environment):
-    runtime, *_ = mcp_environment
+async def test_mcp_strict_arguments_and_errors_do_not_echo_secrets(site_runtime):
+    runtime, *_ = site_runtime
     async with Client(create_server(runtime)) as client:
         for name, args in [
             ("PRIVATE_MARKER", {}),
@@ -100,8 +68,8 @@ async def test_mcp_strict_arguments_and_errors_do_not_echo_secrets(mcp_environme
 
 
 @pytest.mark.anyio
-async def test_mcp_registers_disabled_metadata_but_cannot_change_trust_or_publish(mcp_environment, tmp_path):
-    runtime, _, _, site, _ = mcp_environment
+async def test_mcp_registers_disabled_metadata_but_cannot_change_trust_or_publish(site_runtime, tmp_path):
+    runtime, _, _, site, _ = site_runtime
     config = site.model_dump(mode="json") | {"publish_enabled": False, "ftps_write_preconditions_confirmed": False,
         "ssh_fingerprint": None, "ca_file": None, "local_root": str(tmp_path / "new-site")}
     async with Client(create_server(runtime)) as client:
@@ -117,8 +85,8 @@ async def test_mcp_registers_disabled_metadata_but_cannot_change_trust_or_publis
 
 
 @pytest.mark.anyio
-async def test_mcp_conflict_never_issues_token(mcp_environment):
-    runtime, server, local, *_ = mcp_environment
+async def test_mcp_conflict_never_issues_token(site_runtime):
+    runtime, server, local, *_ = site_runtime
     (local / ".env").write_bytes(b"PRIVATE_MARKER")
     async with Client(create_server(runtime)) as client:
         result = await client.call_tool("preview_deploy", {"domain": "example.com"})
@@ -129,8 +97,8 @@ async def test_mcp_conflict_never_issues_token(mcp_environment):
 
 
 @pytest.mark.anyio
-async def test_mcp_changed_preview_is_consumed_and_cannot_be_reused(mcp_environment):
-    runtime, server, local, *_ = mcp_environment
+async def test_mcp_changed_preview_is_consumed_and_cannot_be_reused(site_runtime):
+    runtime, server, local, *_ = site_runtime
     async with Client(create_server(runtime)) as client:
         preview = data(await client.call_tool("preview_deploy", {"domain": "example.com"}))
         args = {"domain": "example.com", "preview_hash": preview["preview_hash"], "preview_token": preview["preview_token"], "confirm": True}
@@ -141,9 +109,9 @@ async def test_mcp_changed_preview_is_consumed_and_cannot_be_reused(mcp_environm
 
 
 @pytest.mark.anyio
-async def test_mcp_deploy_requires_confirmation_and_opt_in_before_connection(mcp_environment, monkeypatch):
+async def test_mcp_deploy_requires_confirmation_and_opt_in_before_connection(site_runtime, monkeypatch):
     import mcp_locaweb_sftp.operations as module
-    runtime, *_ = mcp_environment
+    runtime, *_ = site_runtime
     async with Client(create_server(runtime)) as client:
         preview = data(await client.call_tool("preview_deploy", {"domain": "example.com"}))
         def forbidden(*args, **kwargs):
@@ -157,10 +125,10 @@ async def test_mcp_deploy_requires_confirmation_and_opt_in_before_connection(mcp
 
 
 @pytest.mark.anyio
-async def test_mcp_partial_failure_preserves_journal_and_does_not_echo_exception(mcp_environment, monkeypatch):
+async def test_mcp_partial_failure_preserves_journal_and_does_not_echo_exception(site_runtime, monkeypatch):
     from mcp_locaweb_sftp.backends.sftp import SFTPBackend
     from mcp_locaweb_sftp.backends.ftps import FTPSBackend
-    runtime, server, _, site, _ = mcp_environment
+    runtime, server, _, site, _ = site_runtime
     def interrupted(*args):
         (server.storage / "site/index.html").write_bytes(b"partial")
         raise OSError("PRIVATE_MARKER")
@@ -176,10 +144,10 @@ async def test_mcp_partial_failure_preserves_journal_and_does_not_echo_exception
 
 
 @pytest.mark.anyio
-async def test_token_expires_during_backup_before_any_upload(mcp_environment, monkeypatch):
+async def test_token_expires_during_backup_before_any_upload(site_runtime, monkeypatch):
     import mcp_locaweb_sftp.core.deploy as module
     from mcp_locaweb_sftp.core.tokens import TokenError
-    runtime, server, *_ = mcp_environment
+    runtime, server, *_ = site_runtime
     original = module.backup_files
     def slow_backup(*args):
         files = original(*args)
@@ -195,3 +163,69 @@ async def test_token_expires_during_backup_before_any_upload(mcp_environment, mo
         output = data(result, "error")
         assert output["backup_complete"] is True and output["remote_mutation_started"] is False
     assert (server.storage / "site/index.html").read_bytes() == b"old remote content"
+
+
+@pytest.mark.anyio
+async def test_mcp_cancel_does_not_release_lock_while_worker_can_still_write(site_runtime, monkeypatch):
+    import mcp_locaweb_sftp.core.deploy as module
+    import mcp_locaweb_sftp.operations as operations
+    runtime, server, *_ = site_runtime
+    entered, release, finished = threading.Event(), threading.Event(), threading.Event()
+    original_backup, original_deploy = module.backup_files, operations.deploy
+    def holding(*args):
+        entered.set()
+        if not release.wait(10):
+            raise TimeoutError("fixture timeout")
+        return original_backup(*args)
+    def tracked(*args, **kwargs):
+        try:
+            return original_deploy(*args, **kwargs)
+        finally:
+            finished.set()
+    monkeypatch.setattr(module, "backup_files", holding)
+    monkeypatch.setattr(operations, "deploy", tracked)
+    scopes = []
+    async with Client(create_server(runtime)) as client:
+        preview = data(await client.call_tool("preview_deploy", {"domain": "example.com"}))
+        async def sending():
+            with anyio.CancelScope() as scope:
+                scopes.append(scope)
+                await client.call_tool("deploy_site", {"domain": "example.com", "preview_hash": preview["preview_hash"],
+                    "preview_token": preview["preview_token"], "confirm": True})
+        async with anyio.create_task_group() as tasks:
+            tasks.start_soon(sending)
+            try:
+                assert await anyio.to_thread.run_sync(entered.wait, 10)
+                scopes[0].cancel()
+                await anyio.sleep(0)
+                assert len(list((runtime.state / "locks").iterdir())) == 1
+                assert not finished.is_set()
+                assert (server.storage / "site/index.html").read_bytes() == b"old remote content"
+            finally:
+                release.set()
+            assert await anyio.to_thread.run_sync(finished.wait, 10)
+    journals = list(runtime.state.rglob("deploy-result.json"))
+    assert len(journals) == 1
+    record = json.loads(journals[0].read_text())
+    assert record["status"] == "success" and record["data"]["uploaded"] == ["index.html"]
+    assert not list((runtime.state / "locks").iterdir())
+
+
+@pytest.mark.anyio
+async def test_mcp_unavailable_keyring_never_falls_back_to_environment(site_runtime, monkeypatch):
+    import mcp_locaweb_sftp.credentials.keyring_store as keyring
+    from mcp_locaweb_sftp.credentials.env_store import EnvStore
+    from mcp_locaweb_sftp.config import Site
+    runtime, _, _, site, _ = site_runtime
+    with runtime.edit_registry() as sites:
+        sites["example.com"] = Site(**(site.model_dump() | {"credential_store": "keyring"}))
+    def broken():
+        raise RuntimeError("PRIVATE_MARKER")
+    def no_fallback(*args):
+        pytest.fail("No environment fallback is permitted")
+    monkeypatch.setattr(keyring, "_native_backend", broken)
+    monkeypatch.setattr(EnvStore, "get", no_fallback)
+    async with Client(create_server(runtime)) as client:
+        result = await client.call_tool("test_connection", {"domain": "example.com"})
+        data(result, "error")
+        assert "PRIVATE_MARKER" not in result.model_dump_json()

@@ -1,6 +1,7 @@
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import replace
 import multiprocessing
+import os
 from pathlib import Path
 import sqlite3
 
@@ -109,3 +110,28 @@ def test_receipt_disk_error_does_not_authorize_deploy(receipt, monkeypatch):
     monkeypatch.setattr(sqlite3, "connect", broken)
     with pytest.raises(sqlite3.OperationalError):
         store.issue(preview)
+
+
+def test_deleted_database_does_not_restore_consumed_token(receipt):
+    store, preview = receipt
+    token = store.issue(preview)["preview_token"]
+    store.consume(preview.domain, preview.digest, token)
+    store.path.unlink()  # exact private test database; never a user file
+    with pytest.raises(TokenError):
+        store.consume(preview.domain, preview.digest, token)
+
+
+def test_corrupt_database_fails_closed(receipt):
+    store, preview = receipt
+    token = store.issue(preview)["preview_token"]
+    store.path.write_bytes(b"not a sqlite database")
+    with pytest.raises(sqlite3.DatabaseError):
+        store.consume(preview.domain, preview.digest, token)
+
+
+def test_hardlinked_receipt_database_is_rejected(receipt):
+    store, preview = receipt
+    token = store.issue(preview)["preview_token"]
+    os.link(store.path, store.directory / "database-alias")
+    with pytest.raises(TokenError):
+        store.consume(preview.domain, preview.digest, token)
