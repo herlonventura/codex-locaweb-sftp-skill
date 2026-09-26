@@ -42,3 +42,8 @@ settings.yaml
 sites.json
 settings.json
 migration.json
+deploy-result.json
+backup-result.json
+backup-manifest.json
+.mcp-locaweb-sftp/
+/state/

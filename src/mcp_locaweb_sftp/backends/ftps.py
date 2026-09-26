@@ -102,3 +102,11 @@ class FTPSBackend(Backend):
 
     def _mkdir(self, absolute):
         self._ftp.mkd(absolute)
+
+    def _write_existing(self, absolute, source):
+        self._regular(self._stat(absolute))
+        try:
+            self._ftp.storbinary("STOR " + absolute, source, blocksize=BLOCK_SIZE)
+        except BaseException:
+            self.close()
+            raise

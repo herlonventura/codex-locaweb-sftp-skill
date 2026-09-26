@@ -91,7 +91,15 @@ def sftp_server(tmp_path):
                 descriptor = os.open(self.local(path), flags | getattr(os, "O_BINARY", 0), 0o600)
                 mode = "r+b" if flags & os.O_RDWR else "wb" if flags & os.O_WRONLY else "rb"
                 stream = os.fdopen(descriptor, mode)
-                handle = paramiko.SFTPHandle(flags)
+                class Handle(paramiko.SFTPHandle):
+                    def chattr(self, attributes):
+                        try:
+                            if attributes.st_size is not None:
+                                stream.truncate(attributes.st_size)
+                            return paramiko.SFTP_OK
+                        except OSError as error:
+                            return paramiko.SFTPServer.convert_errno(error.errno)
+                handle = Handle(flags)
                 if flags & (os.O_WRONLY | os.O_RDWR):
                     handle.writefile = stream
                 if not flags & os.O_WRONLY:

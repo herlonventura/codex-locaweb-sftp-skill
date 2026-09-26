@@ -78,6 +78,19 @@ class Backend(ABC):
     @abstractmethod
     def _mkdir(self, absolute: str) -> None: ...
 
+    def _write_existing(self, absolute: str, source: BinaryIO) -> None:
+        raise NotImplementedError("Replacement is not supported by this backend.")
+
+    def stat_path(self, path: str) -> RemoteEntry | None:
+        return self._stat(self._path(path))
+
+    def file_state(self, path: str) -> FileState:
+        before = self._regular(self.stat_path(path))
+        digest = self.checksum(path)
+        if self.stat_path(path) != before:
+            raise IntegrityError("Remote file changed while checking evidence.")
+        return FileState(path, digest, datetime.fromtimestamp(before.modified, timezone.utc))
+
     def _directory(self, absolute: str) -> None:
         info = self._stat(absolute)
         if info is None or info.kind != "dir" or self._canonical_dir(absolute) != absolute:
@@ -179,16 +192,26 @@ class Backend(ABC):
     def upload(self, path: str, source: BinaryIO, *, expected_sha256: str) -> str:
         """Create a NEW file and verify its contents by reading it back.
 
-        Replacement remains unavailable until the backup/deploy coordinator is
-        implemented. An interrupted upload may leave a partial remote file;
+        An interrupted upload may leave a partial remote file;
         this primitive never removes it or claims a rollback succeeded.
         """
+        return self._upload(path, source, expected_sha256=expected_sha256, previous=None)
+
+    def replace(self, path: str, source: BinaryIO, *, expected_sha256: str, previous: FileState) -> str:
+        """Low-level replacement; the deploy coordinator must verify backup first."""
+        if previous.path != path:
+            raise ValueError("Previous file evidence belongs to another path.")
+        return self._upload(path, source, expected_sha256=expected_sha256, previous=previous)
+
+    def _upload(self, path, source, *, expected_sha256, previous):
         expected = normalize_sha256(expected_sha256)
         if is_blocked_path(path):
             raise UnsafeRemotePath("Upload of a blocked file is forbidden.")
         absolute = self._path(path)
-        if self._stat(absolute) is not None:
-            raise FileExistsError("Remote path already exists; replacement requires the future deployment flow.")
+        if previous is None and self._stat(absolute) is not None:
+            raise FileExistsError("Remote path already exists.")
+        if previous is not None and self.file_state(path) != previous:
+            raise IntegrityError("Remote file differs from approved previous state.")
         # Snapshot and validate BEFORE any write. Large streams spill to a
         # temporary file automatically removed when this context exits.
         with SpooledTemporaryFile(max_size=8 * 1024 * 1024, mode="w+b") as snapshot:
@@ -200,9 +223,14 @@ class Backend(ABC):
                 raise IntegrityError("Source does not match the expected SHA-256.")
             snapshot.seek(0)
             absolute = self._path(path)
-            if self._stat(absolute) is not None:
+            if previous is None and self._stat(absolute) is not None:
                 raise FileExistsError("Remote path appeared before upload.")
-            self._write_new(absolute, snapshot)
+            if previous is None:
+                self._write_new(absolute, snapshot)
+            else:
+                if self.file_state(path) != previous:
+                    raise IntegrityError("Remote file changed before replacement.")
+                self._write_existing(absolute, snapshot)
         if self.checksum(path) != expected:
             raise IntegrityError("Uploaded content does not match the expected SHA-256.")
         return expected

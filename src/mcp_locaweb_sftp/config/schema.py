@@ -52,6 +52,7 @@ class Site(StrictModel):
     ssh_fingerprint: str | None = None
     ca_file: str | None = None
     publish_enabled: bool = False
+    ftps_write_preconditions_confirmed: bool = False
     credential_store: Literal["keyring", "age", "env"] = "keyring"
     blocked_paths: tuple[str, ...] = ()
 

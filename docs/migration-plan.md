@@ -1,8 +1,8 @@
-# Migração para Python e MCP — plano e etapas 1–3
+# Migração para Python e MCP — plano e etapas 1–4
 
 ## Estado
 
-Etapas 1–3 implementadas em 26/09/2026. As etapas 4–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O pacote Python atual contém núcleo, transportes, configuração, provedores de credenciais e migração de cadastros; não é um aplicativo instalável pelo PyPI nem um servidor MCP.
+Etapas 1–4 implementadas em 26/09/2026. As etapas 5–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O código Python atual contém núcleo, transportes, configuração, provedores de credenciais, migração de cadastros e CLI com coordenação de backup/deploy; não é um aplicativo instalável pelo PyPI nem um servidor MCP. Os números nas seções de cada etapa são evidências históricas daquela entrega.
 
 O alvo é Python 3.11+. A execução local foi verificada em Windows com Python 3.14.3. Usar somente funções da biblioteca padrão no núcleo evita dependências de WinSCP, DPAPI e comandos de sistema, mas não comprova por si só execução em Linux/macOS; essa verificação pertence à matriz de testes futura.
 
@@ -67,7 +67,7 @@ Os servidores em `tests/conftest.py` usam loopback e portas dinâmicas: SFTP com
 
 Resultado local: **236 testes Python aprovados**, com 100% de cobertura de instruções e ramos do núcleo e dos backends atuais. O teste PowerShell legado também passou. Ambiente: Windows, Python 3.14.3, Paramiko 4.0.0, pyftpdlib 2.2.0 e pyOpenSSL 26.4.0. A sintaxe do código foi conferida com a gramática de Python 3.11; a execução nesse interpretador e em Linux/macOS segue pendente.
 
-O backend ainda não substitui arquivos: essa operação exige a coordenação de backup e publicação da etapa 4. Em FTPS, a checagem prévia de existência não é atômica, e alguns servidores ocultam links; não tratar essa camada como deploy de produção pronto. [Contrato, evidências e limitações](backends.md).
+Na entrega da etapa 2, o backend ainda não substituía arquivos. A etapa 4 acrescentou essa operação sob a coordenação de backup e publicação. Em FTPS, a checagem prévia de existência não é atômica, e alguns servidores ocultam links. [Contrato, evidências e limitações](backends.md).
 
 ## Etapa 3: configuração, credenciais e migração
 
@@ -79,12 +79,24 @@ Validação local: **330 testes aprovados, 96,78% de cobertura de instruções e
 
 As operações do cofre nativo foram simuladas; nenhuma senha foi cadastrada no cofre real do usuário. age foi executado de fato com chaves temporárias. SOPS não está implementado; age atende à opção criptografada desta etapa. [Contrato e limitações](configuration-credentials.md).
 
+## Etapa 4: CLI e coordenação das operações
+
+Implementados `python -m mcp_locaweb_sftp`, aliases em português e `setup/configurar` para cadastro por perguntas, sem depender de FileZilla. Senha só em prompt local oculto, nunca argumento ou YAML. Cadastro novo começa desativado; falta de fingerprint ou cofre indisponível fica indicada como pendência. Migração da etapa 3 exposta pelo comando `migrate/migrar`.
+
+O coordenador cria snapshots locais, exige backup de todos os arquivos a substituir antes de qualquer upload, revalida a prévia e confere SHA-256 após cada envio. Usa trava local por endpoint e diário de intenção antes de mutações; falhas parciais ficam registradas sem exclusão ou rollback automático. Caminhos locais rejeitam links, junções e hardlinks. Configurações privadas e arquivos age foram acrescentados à lista mínima de bloqueios.
+
+A publicação exige opt-in global e por site, `--confirm` e hash da prévia. **Ainda não existe token efêmero**: expiração e consumo único pertencem à etapa 5. O backend não substitui a política do coordenador; o hash não comprova consentimento humano.
+
+FTPS exige `ftps_write_preconditions_confirmed`, uma declaração administrativa de confinamento e ausência de escritores concorrentes, não uma garantia do protocolo. A trava local não bloqueia outros computadores ou aplicações; escrita remota não é transacional. [Uso, cadastro e recuperação](cli.md).
+
+Validação local: **405 testes aprovados, sem skips com age disponível; 95,13% de cobertura combinada de instruções e ramos**. Testes incluem cadastro do zero sem conexão, prompt oculto, pendências de cofre/fingerprint, prévia alterada, envio real aos servidores locais SFTP/FTPS, backup antes de substituir, truncamento de arquivo menor, conflito, corrupção, mudança remota antes de substituir, falha de disco após upload e manutenção do diário de intenção. O teste PowerShell legado, a conferência de dependências e a análise de sintaxe com gramática Python 3.11 passaram. Execução: Windows/Python 3.14.3, Click 8.5.0. Cofre nativo simulado, age real, nenhuma conta de hospedagem acessada. Execução em Python 3.11 e Linux/macOS permanece pendente.
+
 ## Sequência aceita
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.
 2. **Backends + servidor SFTP simulado — concluído.** SFTP/Paramiko e FTPS/ftplib com interface comum, fingerprint SSH confirmada e certificado TLS validado. Fixture baseada em `paramiko.ServerInterface` pronta para as etapas 3–5; acrescentado servidor FTPS local. SHA-256 remoto calculado pela leitura integral do conteúdo: erro de leitura/verificação impede sucesso. Limites de FTPS documentados.
 3. **Credenciais, configuração e execução da migração — concluído.** Keyring, age e ambiente; YAML validado, JSON legado e migração de cadastros testada em cópia isolada. Senhas DPAPI permanecem intocadas e exigem recadastro; nenhum segredo é exportado em claro. A etapa 4 expõe essa lógica pela CLI.
-4. **CLI.** Expor operações e aliases em português, inclusive `migrate`, reutilizando a lógica já testada. Exigir opt-in de publicação; parar diante de conflitos, falhas de backup ou hash divergente; registrar falhas parciais e nunca excluir arquivos remotos.
+4. **CLI — concluída.** Operações e aliases em português, cadastro interativo e `migrate`, reutilizando a lógica testada. Opt-in de publicação, prévia vinculada por hash, bloqueio de conflitos, backup verificado, verificação pós-upload e registros de falhas parciais. Nenhuma exclusão remota. Evidências e limitações acima.
 5. **MCP e token de prévia.** Usar SDK oficial com `stdio`. A trava definida é um **token efêmero gerado por `preview`, vinculado ao hash da prévia, válido por 5 minutos e exigido em `deploy`**. Vincular a prévia ao domínio, origem, destino e evidências dos arquivos. Consumir o token uma vez; expiração, reutilização ou qualquer alteração da prévia deve exigir nova prévia. A confirmação explícita do usuário e `publish_enabled` permanecem necessárias: o token comprova a prévia autorizada tecnicamente, mas, sozinho, não comprova consentimento humano.
 6. **Testes ampliados.** Complementar os testes já presentes desde a etapa 1 e o servidor simulado da etapa 2. Cobrir concorrência, backups, falha parcial, credenciais, CLI/MCP e expiração/vínculo/reutilização do token. Exigir cobertura maior que 80% e apresentar limitações verificadas.
 7. **Empacotamento e CI.** Preparar pyproject, Docker, pip/pipx e binários por sistema. A matriz deve tentar Linux, macOS e Windows. A etapa pode avançar com **CI verde em pelo menos 2 sistemas**; se o terceiro falhar, abrir issue com evidências e indicar claramente que ele continua pendente. Não afirmar disponibilidade no PyPI nem suporte executado que não tenha sido confirmado.

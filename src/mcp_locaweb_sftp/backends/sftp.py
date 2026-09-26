@@ -80,3 +80,12 @@ class SFTPBackend(Backend):
 
     def _mkdir(self, absolute):
         self._sftp.mkdir(absolute)
+
+    def _write_existing(self, absolute, source):
+        # r+b cannot silently recreate a file deleted after the preflight.
+        with self._sftp.open(absolute, "r+b") as stream:
+            length = 0
+            while chunk := source.read(BLOCK_SIZE):
+                stream.write(chunk)
+                length += len(chunk)
+            stream.truncate(length)

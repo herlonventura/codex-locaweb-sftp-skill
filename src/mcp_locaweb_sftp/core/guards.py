@@ -14,6 +14,9 @@ DEFAULT_BLOCKED_PATTERNS = (
     "configuration.php", "config.php", ".htaccess", "web.config", "agents.md",
     "*.bak", "*.backup", "*.tmp", "*.temp", "*.log", "*.pem", "*.key",
     "*.pfx", "*.p12", "*.ps1", ".htpasswd", "id_rsa", "id_ed25519",
+    "*.age", "*.identity", "credentials", "private-config", ".mcp-locaweb-sftp",
+    "sites.yaml", "settings.yaml", "sites.json", "settings.json", "migration.json",
+    "deploy-result.json", "backup-result.json", "backup-manifest.json",
 )
 _DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?")
 _DEVICES = {"con", "prn", "aux", "nul", "conin$", "conout$"} | {

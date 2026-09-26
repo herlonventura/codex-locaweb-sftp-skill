@@ -4,13 +4,15 @@ Uma skill para consultar, comparar, copiar e publicar arquivos de sites hospedad
 
 O projeto inclui uma skill Codex (`SKILL.md`) e dois scripts PowerShell (`scripts/`). A skill interpreta o pedido; o wrapper traduz a ação para o backend; o backend usa a biblioteca .NET do WinSCP para acessar o servidor. Cada domínio é cadastrado localmente com uma pasta de origem e uma raiz remota. A senha fica criptografada pelo DPAPI do Windows, fora deste repositório.
 
-## Migração para Python: etapas 1–3
+## Migração para Python: etapas 1–4
 
-O fluxo operacional descrito abaixo continua exigindo Windows. O novo núcleo em `src/mcp_locaweb_sftp/core/` compara inventários em memória, calcula SHA-256, identifica domínios cadastrados e bloqueia caminhos perigosos. Ele usa somente a biblioteca padrão do Python. A camada `backends/` acrescenta SFTP com Paramiko e FTPS explícito com `ftplib`, verificando a identidade do servidor e os hashes dos arquivos. A etapa 3 acrescenta configuração YAML/Pydantic, leitura do JSON legado, credenciais por cofre nativo/age/ambiente e migração de cadastros em cópia isolada. Ainda não há CLI nem servidor MCP em Python.
+O fluxo PowerShell descrito abaixo continua exigindo Windows. A implementação Python já tem comparação por SHA-256, SFTP/FTPS com identidade validada, configuração YAML, cofres de credenciais, migração de cadastros e CLI com aliases em português. A CLI inclui prévia, backup verificado antes de substituições, confirmação de publicação e registro de falhas parciais. Ainda não há servidor MCP nem pacote publicado no PyPI.
 
-Validação atual em Windows com Python 3.14.3: **330 testes aprovados**, com **96,78% de cobertura de instruções e ramos** do código Python. Inclui servidores locais SFTP/FTPS, age real e cofre do sistema simulado; não comprova segurança integral nem execução multi-SO. Nenhuma conta real foi acessada. A migração preserva a origem, desativa publicação e exige recadastro das senhas DPAPI, sem descriptografá-las: [configuração, credenciais e migração](docs/configuration-credentials.md).
+**Instalando do zero?** Execute `python -m mcp_locaweb_sftp configurar` no ambiente de desenvolvimento preparado no [guia da CLI](docs/cli.md). O assistente pergunta domínio, protocolo, servidor, porta, usuário e pastas. A senha é digitada somente em prompt local oculto e guardada no cofre escolhido. Não depende do FileZilla. Cada site começa com publicação desativada; o cadastro não testa conexão nem envia arquivos.
 
-O transporte novo permite criar arquivos, mas recusa substituir arquivos existentes enquanto o fluxo de backup/publicação não está implementado. FTPS tem limitações de concorrência e de identificação de links: [contrato e limites dos backends](docs/backends.md).
+Validação em Windows/Python 3.14.3: **405 testes aprovados, 95,13% de cobertura de instruções e ramos**. Inclui servidores locais SFTP/FTPS, age real e cofre do sistema simulado; não comprova execução multi-SO nem segurança integral. Nenhuma conta real foi acessada. A migração preserva a origem, desativa publicação e exige recadastro das senhas DPAPI: [configuração e credenciais](docs/configuration-credentials.md). Os resultados da suíte estão no [registro da etapa 4](docs/migration-plan.md#etapa-4-cli-e-coordenação-das-operações).
+
+O envio exige `publish_enabled` global e por site, hash de uma prévia revisada e `--confirm`. O **token efêmero de cinco minutos ainda pertence à etapa 5**. As substituições podem deixar arquivos parciais em caso de falha; não há rollback automático nem exclusão remota. FTPS exige confirmação administrativa adicional de confinamento e ausência de escritores concorrentes. [Fluxo e recuperação](docs/cli.md) · [Limites dos transportes](docs/backends.md).
 
 [Decisões, testes e plano das oito etapas](docs/migration-plan.md). Os scripts PowerShell continuam disponíveis durante a transição.
 

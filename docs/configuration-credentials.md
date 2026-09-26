@@ -1,6 +1,6 @@
 # Configuração, credenciais e migração — etapa 3
 
-A implementação Python agora carrega configurações, seleciona um provedor de credenciais e abre uma conexão cadastrada. Ainda é uma biblioteca de desenvolvimento. A CLI, o comando público `migrate` e a coordenação de backup/deploy serão entregues na etapa 4; o MCP continua previsto para a etapa 5. A instalação PowerShell existente não foi alterada.
+A implementação Python carrega configurações, seleciona um provedor de credenciais e abre uma conexão cadastrada. A etapa 4 acrescentou a [CLI](cli.md), incluindo cadastro interativo, `migrate` e coordenação de backup/deploy; o MCP continua previsto para a etapa 5. A instalação PowerShell existente não foi alterada. As evidências de testes ao final deste documento correspondem à entrega da etapa 3; os resultados atuais estão no [plano](migration-plan.md).
 
 ## Configuração sem segredos
 
@@ -19,7 +19,8 @@ O carregador rejeita chaves duplicadas, domínios que colidem após normalizaç�
 | `ssh_fingerprint` | Uma fingerprint OpenSSH SHA256; `null` permite cadastro pendente, mas bloqueia conexão SFTP |
 | `ca_file` | Opcional, somente para FTPS; caminho de CA confiável, sem desabilitar verificação TLS |
 | `credential_store` | `keyring`, `age` ou `env`; padrão `keyring` |
-| `publish_enabled` | Padrão `false`; a autorização de publicação será aplicada pelo coordenador da etapa 4 |
+| `publish_enabled` | Padrão `false`; o coordenador exige opt-in no site e nas configurações globais |
+| `ftps_write_preconditions_confirmed` | Padrão `false`; para envio FTPS exige confirmação administrativa de confinamento e ausência de escritores concorrentes |
 | `blocked_paths` | Regras adicionais; não removem os bloqueios mínimos do núcleo |
 
 `Settings` contém `schema_version: 1`, `publish_enabled: false`, `timeout_seconds` finito entre mais de zero e 120 segundos, e o bloco opcional `age`. UNC não é suportado nesta etapa. Caminhos de configuração/cofre são verificados para rejeitar links e reparse points, incluindo junções Windows.
@@ -71,7 +72,7 @@ A variável deve ser injetada pelo ambiente/cofre do CI. Não gravá-la em arqui
 
 `open_site(sites, domain, settings=...)` exige correspondência exata de domínio cadastrado, verifica a prontidão da fingerprint e seleciona o provedor declarado. Um provedor passado explicitamente com tipo diferente é rejeitado. Não tenta outra senha/provedor se a leitura ou autenticação falhar. Erros de conexão são apresentados sem os diagnósticos brutos, que poderiam incluir informações sensíveis.
 
-O retorno é a conexão de baixo nível da etapa 2. Isso **não é autorização de deploy**: `publish_enabled`, regras adicionais do site, backup, conflito de datas e registros de falha serão aplicados pelo coordenador da etapa 4. Não usar os métodos de transporte diretamente como substituto dessa política.
+O retorno é a conexão de baixo nível. Isso **não é autorização de deploy**: `publish_enabled`, regras adicionais do site, backup, conflito de datas e registros de falha são aplicados pelo coordenador da etapa 4. Não usar os métodos de transporte diretamente como substituto dessa política. Para novos usuários, o [assistente `setup/configurar`](cli.md#primeira-instalação-perguntas-por-site) pergunta os dados de cada site e cadastra a senha por prompt oculto.
 
 ## Migração implementada e testada
 
