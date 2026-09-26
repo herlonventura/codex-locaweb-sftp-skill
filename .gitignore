@@ -32,3 +32,13 @@ htmlcov/
 coverage.xml
 config/sites.yaml
 config/settings.yaml
+*.age
+*.identity
+private-config/
+/credentials/
+# Cadastros e relatório gerados, inclusive fora da pasta config/
+sites.yaml
+settings.yaml
+sites.json
+settings.json
+migration.json

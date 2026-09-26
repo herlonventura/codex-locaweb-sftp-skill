@@ -1,0 +1,10 @@
+schema_version: 1
+publish_enabled: false
+timeout_seconds: 15.0
+age: null
+# Para credential_store: age, configure explicitamente o bloco age:
+#   directory: caminho absoluto da pasta privada de arquivos .age
+#   executable: caminho absoluto do executável age confiável
+#   identity: caminho da identidade X25519 (necessária para leitura)
+#   recipient: chave PÚBLICA age1... (necessária para gravação)
+# Nunca inclua senha ou chave privada no YAML.

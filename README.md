@@ -4,11 +4,13 @@ Uma skill para consultar, comparar, copiar e publicar arquivos de sites hospedad
 
 O projeto inclui uma skill Codex (`SKILL.md`) e dois scripts PowerShell (`scripts/`). A skill interpreta o pedido; o wrapper traduz a ação para o backend; o backend usa a biblioteca .NET do WinSCP para acessar o servidor. Cada domínio é cadastrado localmente com uma pasta de origem e uma raiz remota. A senha fica criptografada pelo DPAPI do Windows, fora deste repositório.
 
-## Migração para Python: etapas 1 e 2
+## Migração para Python: etapas 1–3
 
-O fluxo operacional descrito abaixo continua exigindo Windows. O novo núcleo em `src/mcp_locaweb_sftp/core/` compara inventários em memória, calcula SHA-256, identifica domínios cadastrados e bloqueia caminhos perigosos. Ele usa somente a biblioteca padrão do Python. A camada `backends/` acrescenta SFTP com Paramiko e FTPS explícito com `ftplib`, verificando a identidade do servidor e os hashes dos arquivos. Ainda não há CLI, armazenamento de credenciais nem servidor MCP em Python.
+O fluxo operacional descrito abaixo continua exigindo Windows. O novo núcleo em `src/mcp_locaweb_sftp/core/` compara inventários em memória, calcula SHA-256, identifica domínios cadastrados e bloqueia caminhos perigosos. Ele usa somente a biblioteca padrão do Python. A camada `backends/` acrescenta SFTP com Paramiko e FTPS explícito com `ftplib`, verificando a identidade do servidor e os hashes dos arquivos. A etapa 3 acrescenta configuração YAML/Pydantic, leitura do JSON legado, credenciais por cofre nativo/age/ambiente e migração de cadastros em cópia isolada. Ainda não há CLI nem servidor MCP em Python.
 
-A etapa 2 foi testada em Windows com Python 3.14.3: **236 testes aprovados**, incluindo servidores SFTP e FTPS locais com dados fictícios. A cobertura de instruções e ramos do código Python atual foi de 100%; isso não comprova segurança integral nem compatibilidade executada em outros sistemas. O transporte novo permite criar arquivos, mas recusa substituir arquivos existentes enquanto o fluxo de backup/publicação não está implementado. FTPS tem limitações de concorrência e de identificação de links: [contrato e limites dos backends](docs/backends.md). Nenhuma conta real foi acessada nesses testes.
+Validação atual em Windows com Python 3.14.3: **330 testes aprovados**, com **96,78% de cobertura de instruções e ramos** do código Python. Inclui servidores locais SFTP/FTPS, age real e cofre do sistema simulado; não comprova segurança integral nem execução multi-SO. Nenhuma conta real foi acessada. A migração preserva a origem, desativa publicação e exige recadastro das senhas DPAPI, sem descriptografá-las: [configuração, credenciais e migração](docs/configuration-credentials.md).
+
+O transporte novo permite criar arquivos, mas recusa substituir arquivos existentes enquanto o fluxo de backup/publicação não está implementado. FTPS tem limitações de concorrência e de identificação de links: [contrato e limites dos backends](docs/backends.md).
 
 [Decisões, testes e plano das oito etapas](docs/migration-plan.md). Os scripts PowerShell continuam disponíveis durante a transição.
 

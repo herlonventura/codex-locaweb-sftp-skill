@@ -1,8 +1,8 @@
-# Migração para Python e MCP — plano e etapas 1–2
+# Migração para Python e MCP — plano e etapas 1–3
 
 ## Estado
 
-Etapas 1 e 2 implementadas em 26/09/2026. As etapas 3–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O pacote Python atual contém o núcleo e os transportes de desenvolvimento, não um aplicativo instalável pelo PyPI nem um servidor MCP.
+Etapas 1–3 implementadas em 26/09/2026. As etapas 4–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O pacote Python atual contém núcleo, transportes, configuração, provedores de credenciais e migração de cadastros; não é um aplicativo instalável pelo PyPI nem um servidor MCP.
 
 O alvo é Python 3.11+. A execução local foi verificada em Windows com Python 3.14.3. Usar somente funções da biblioteca padrão no núcleo evita dependências de WinSCP, DPAPI e comandos de sistema, mas não comprova por si só execução em Linux/macOS; essa verificação pertence à matriz de testes futura.
 
@@ -69,11 +69,21 @@ Resultado local: **236 testes Python aprovados**, com 100% de cobertura de instr
 
 O backend ainda não substitui arquivos: essa operação exige a coordenação de backup e publicação da etapa 4. Em FTPS, a checagem prévia de existência não é atômica, e alguns servidores ocultam links; não tratar essa camada como deploy de produção pronto. [Contrato, evidências e limitações](backends.md).
 
+## Etapa 3: configuração, credenciais e migração
+
+Implementados modelos Pydantic imutáveis, carregamento restrito de YAML/JSON legado e seleção explícita entre cofre nativo, age e ambiente. As credenciais são vinculadas ao domínio e à identidade da conexão, retornam mascaradas e não entram no YAML. Não há fallback para arquivo em claro nem descoberta genérica de plugins de cofre.
+
+`migrate_legacy` converte os cadastros para um destino novo, preserva a origem, aplica mapeamento explícito de pastas locais e grava publicação desativada. O relatório final indica senhas pendentes de recadastro e fingerprints ausentes. A migração não lê/descriptografa DPAPI; o recadastro é a estratégia adotada nesta implementação. Em erro de gravação, preserva o destino incompleto e não retorna sucesso. A etapa 4 exporá essa lógica na CLI; a etapa 8 documentará o fluxo final de uso.
+
+Validação local: **330 testes aprovados, 96,78% de cobertura de instruções e ramos do código Python atual**. Testes com dados fictícios incluem migração isolada seguida de recadastro/conexão SFTP, criptografia age real, FTPS com senha age, adulteração, erro de disco, rejeição de configuração ambígua e proteção das mensagens de erro. O teste PowerShell legado passou. Windows/Python 3.14.3, Pydantic 2.13.5, PyYAML 6.0.3, keyring 25.7.0 e age 1.3.2. Sintaxe conferida com gramática de Python 3.11; execução nesse interpretador e em outros SOs continua pendente.
+
+As operações do cofre nativo foram simuladas; nenhuma senha foi cadastrada no cofre real do usuário. age foi executado de fato com chaves temporárias. SOPS não está implementado; age atende à opção criptografada desta etapa. [Contrato e limitações](configuration-credentials.md).
+
 ## Sequência aceita
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.
 2. **Backends + servidor SFTP simulado — concluído.** SFTP/Paramiko e FTPS/ftplib com interface comum, fingerprint SSH confirmada e certificado TLS validado. Fixture baseada em `paramiko.ServerInterface` pronta para as etapas 3–5; acrescentado servidor FTPS local. SHA-256 remoto calculado pela leitura integral do conteúdo: erro de leitura/verificação impede sucesso. Limites de FTPS documentados.
-3. **Credenciais, configuração e execução da migração.** Keyring, age/sops e ambiente com tratamento de segredos, YAML validado e leitura do JSON legado. Implementar e testar a lógica de migração em cópia isolada nesta etapa. DPAPI depende do Windows e usuário originais; recadastrar uma senha pode ser necessário. Nenhum segredo deve ser exportado em claro. A etapa 4 expõe essa lógica pela CLI.
+3. **Credenciais, configuração e execução da migração — concluído.** Keyring, age e ambiente; YAML validado, JSON legado e migração de cadastros testada em cópia isolada. Senhas DPAPI permanecem intocadas e exigem recadastro; nenhum segredo é exportado em claro. A etapa 4 expõe essa lógica pela CLI.
 4. **CLI.** Expor operações e aliases em português, inclusive `migrate`, reutilizando a lógica já testada. Exigir opt-in de publicação; parar diante de conflitos, falhas de backup ou hash divergente; registrar falhas parciais e nunca excluir arquivos remotos.
 5. **MCP e token de prévia.** Usar SDK oficial com `stdio`. A trava definida é um **token efêmero gerado por `preview`, vinculado ao hash da prévia, válido por 5 minutos e exigido em `deploy`**. Vincular a prévia ao domínio, origem, destino e evidências dos arquivos. Consumir o token uma vez; expiração, reutilização ou qualquer alteração da prévia deve exigir nova prévia. A confirmação explícita do usuário e `publish_enabled` permanecem necessárias: o token comprova a prévia autorizada tecnicamente, mas, sozinho, não comprova consentimento humano.
 6. **Testes ampliados.** Complementar os testes já presentes desde a etapa 1 e o servidor simulado da etapa 2. Cobrir concorrência, backups, falha parcial, credenciais, CLI/MCP e expiração/vínculo/reutilização do token. Exigir cobertura maior que 80% e apresentar limitações verificadas.

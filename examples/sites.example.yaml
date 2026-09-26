@@ -1,0 +1,14 @@
+# Dados fictícios. Cadastre a senha no provedor escolhido, nunca neste arquivo.
+example.com:
+  protocol: sftp
+  host: sftp.example.com
+  port: 22
+  user: site_user
+  local_root: ~/sites/example.com/public_html
+  remote_root: /site
+  ssh_fingerprint: null  # confirmar por canal independente antes de conectar
+  credential_store: keyring  # keyring, age ou env; sem fallback automático
+  publish_enabled: false
+  blocked_paths:
+    - "*.sql"
+    - "internal/"

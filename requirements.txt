@@ -1,1 +1,4 @@
 paramiko>=3.5,<5
+pydantic>=2.10,<3
+PyYAML>=6,<7
+keyring>=25,<27
