@@ -1,8 +1,8 @@
-# Migração para Python e MCP — plano e etapa 1
+# Migração para Python e MCP — plano e etapas 1–2
 
 ## Estado
 
-Etapa 1 implementada em 26/09/2026. As etapas 2–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O pacote Python atual é um núcleo de desenvolvimento, não um aplicativo instalável pelo PyPI nem um servidor MCP.
+Etapas 1 e 2 implementadas em 26/09/2026. As etapas 3–8 estão pendentes. Os scripts Windows existentes e a skill operacional continuam usando seu fluxo original. O pacote Python atual contém o núcleo e os transportes de desenvolvimento, não um aplicativo instalável pelo PyPI nem um servidor MCP.
 
 O alvo é Python 3.11+. A execução local foi verificada em Windows com Python 3.14.3. Usar somente funções da biblioteca padrão no núcleo evita dependências de WinSCP, DPAPI e comandos de sistema, mas não comprova por si só execução em Linux/macOS; essa verificação pertence à matriz de testes futura.
 
@@ -59,10 +59,20 @@ O teste PowerShell existente continua em `tests/test-deploy-local.ps1`. Ele usa 
 
 Resultado local em 26/09/2026: **149 testes Python aprovados, 100% de cobertura de instruções e ramos do núcleo novo**, com pytest 9.1.1 e pytest-cov 7.1.0. O teste PowerShell também passou. A sintaxe foi conferida com a gramática Python 3.11; execução nesse interpretador e em outros sistemas ainda não foi realizada. Nenhum site real foi acessado pelos testes.
 
-## Sequência aceita para as próximas etapas
+## Etapa 2: transportes e servidores simulados
+
+Implementados `backends/base.py`, `backends/sftp.py` e `backends/ftps.py`, com interface comum para conexão, inventário, download, SHA-256, criação de diretório e envio de arquivo novo. SFTP exige fingerprint SHA256 confirmada antes da autenticação; FTPS exige TLS validado no controle e nos dados. Os dois calculam o SHA-256 remoto lendo o conteúdo completo, sem comandos de shell ou dependência de extensão proprietária do servidor.
+
+Os servidores em `tests/conftest.py` usam loopback e portas dinâmicas: SFTP com `paramiko.ServerInterface` e FTPS com `pyftpdlib`. Chaves e certificados são gerados durante o teste; credenciais são fictícias e os arquivos ficam em diretórios temporários. As fixtures já podem ser reutilizadas nas etapas 3–5.
+
+Resultado local: **236 testes Python aprovados**, com 100% de cobertura de instruções e ramos do núcleo e dos backends atuais. O teste PowerShell legado também passou. Ambiente: Windows, Python 3.14.3, Paramiko 4.0.0, pyftpdlib 2.2.0 e pyOpenSSL 26.4.0. A sintaxe do código foi conferida com a gramática de Python 3.11; a execução nesse interpretador e em Linux/macOS segue pendente.
+
+O backend ainda não substitui arquivos: essa operação exige a coordenação de backup e publicação da etapa 4. Em FTPS, a checagem prévia de existência não é atômica, e alguns servidores ocultam links; não tratar essa camada como deploy de produção pronto. [Contrato, evidências e limitações](backends.md).
+
+## Sequência aceita
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.
-2. **Backends + servidor SFTP simulado.** Implementar SFTP/Paramiko e FTPS/ftplib com interface comum. Criar já nesta etapa a fixture baseada em `paramiko.ServerInterface`, permitindo testar as etapas 3, 4 e 5 sem aguardar a 6. Exigir chave SSH confirmada e certificado TLS validado. SHA-256 remoto em FTPS requer método verificável, possivelmente baixar conteúdo para cálculo; se isso não for possível, bloquear a operação e documentar o limite.
+2. **Backends + servidor SFTP simulado — concluído.** SFTP/Paramiko e FTPS/ftplib com interface comum, fingerprint SSH confirmada e certificado TLS validado. Fixture baseada em `paramiko.ServerInterface` pronta para as etapas 3–5; acrescentado servidor FTPS local. SHA-256 remoto calculado pela leitura integral do conteúdo: erro de leitura/verificação impede sucesso. Limites de FTPS documentados.
 3. **Credenciais, configuração e execução da migração.** Keyring, age/sops e ambiente com tratamento de segredos, YAML validado e leitura do JSON legado. Implementar e testar a lógica de migração em cópia isolada nesta etapa. DPAPI depende do Windows e usuário originais; recadastrar uma senha pode ser necessário. Nenhum segredo deve ser exportado em claro. A etapa 4 expõe essa lógica pela CLI.
 4. **CLI.** Expor operações e aliases em português, inclusive `migrate`, reutilizando a lógica já testada. Exigir opt-in de publicação; parar diante de conflitos, falhas de backup ou hash divergente; registrar falhas parciais e nunca excluir arquivos remotos.
 5. **MCP e token de prévia.** Usar SDK oficial com `stdio`. A trava definida é um **token efêmero gerado por `preview`, vinculado ao hash da prévia, válido por 5 minutos e exigido em `deploy`**. Vincular a prévia ao domínio, origem, destino e evidências dos arquivos. Consumir o token uma vez; expiração, reutilização ou qualquer alteração da prévia deve exigir nova prévia. A confirmação explícita do usuário e `publish_enabled` permanecem necessárias: o token comprova a prévia autorizada tecnicamente, mas, sozinho, não comprova consentimento humano.

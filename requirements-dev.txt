@@ -1,2 +1,5 @@
+-r requirements.txt
 pytest>=8.3,<10
 pytest-cov>=6,<8
+pyftpdlib>=2,<3
+pyOpenSSL>=25,<27
