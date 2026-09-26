@@ -30,7 +30,7 @@ O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e p
 
 ## O que foi comprovado
 
-[CI da etapa 7](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36276055669): **sete jobs verdes**, Windows X64/Linux X64/macOS ARM64 com Python 3.11 e 3.14, mais Docker. Foram **467 testes por ambiente**, com cobertura de instruções e ramos entre **94,77% e 95,09%**. Testes adicionais verificaram pip/pipx, comandos instalados e binários PyInstaller, com prévia CLI, envio MCP, backup e rejeição de token reutilizado contra SFTP/FTPS locais.
+[CI do VHE Deploy](https://github.com/herlonventura/codex-locaweb-sftp-skill/actions/runs/36278483565): **sete jobs verdes**, Windows X64/Linux X64/macOS ARM64 com Python 3.11 e 3.14, mais Docker. Foram **496 testes por ambiente**, com cobertura de instruções e ramos entre **94,94% e 95,23%**. Testes adicionais verificaram pip/pipx, os novos comandos e binários PyInstaller, com prévia CLI, envio MCP, backup e rejeição de token reutilizado contra SFTP/FTPS locais.
 
 | Item | Evidência e limite |
 |---|---|
