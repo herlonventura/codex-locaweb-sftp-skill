@@ -19,7 +19,7 @@ O fluxo foi desenvolvido e testado com SFTP. O backend também aceita FTPS e FTP
 Clone o repositório na pasta de skills do Codex. Por exemplo, no PowerShell:
 
 ```powershell
-git clone https://github.com/hmvimports/codex-locaweb-sftp-skill.git "$env:USERPROFILE\.codex\skills\mcplocaweb"
+git clone https://github.com/herlonventura/codex-locaweb-sftp-skill.git "$env:USERPROFILE\.codex\skills\mcplocaweb"
 Set-Location "$env:USERPROFILE\.codex\skills\mcplocaweb"
 Copy-Item .\config\sites.example.json .\config\sites.json
 Copy-Item .\config\settings.example.json .\config\settings.json
