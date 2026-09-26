@@ -1,4 +1,4 @@
-# Skill Codex para sites Locaweb via SFTP
+# Skill Codex para sites Locaweb e revenda via SFTP
 
 Uma skill para consultar, comparar, copiar e publicar arquivos de sites hospedados na Locaweb usando um **domínio completo** como identificador. O mesmo mecanismo serve para outros provedores SFTP/FTPS. O texto `/mcplocaweb/dominio.com.br` é uma convenção entendida pela skill; **não é um comando de barra nativo do Codex nem um servidor MCP**.
 
