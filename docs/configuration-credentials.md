@@ -1,6 +1,6 @@
 # Configuração, credenciais e migração — etapa 3
 
-A implementação Python carrega configurações, seleciona um provedor de credenciais e abre uma conexão cadastrada. A etapa 4 acrescentou a [CLI](cli.md), incluindo cadastro interativo, `migrate` e coordenação de backup/deploy; o MCP continua previsto para a etapa 5. A instalação PowerShell existente não foi alterada. As evidências de testes ao final deste documento correspondem à entrega da etapa 3; os resultados atuais estão no [plano](migration-plan.md).
+A implementação Python carrega configurações, seleciona um provedor de credenciais e abre uma conexão cadastrada. A etapa 4 acrescentou a [CLI](cli.md), incluindo cadastro interativo, `migrate` e coordenação de backup/deploy; a etapa 5 acrescentou [MCP via stdio e token efêmero](mcp-setup.md). A instalação PowerShell existente não foi alterada. As evidências de testes ao final deste documento correspondem à entrega da etapa 3; os resultados atuais estão no [plano](migration-plan.md).
 
 ## Configuração sem segredos
 

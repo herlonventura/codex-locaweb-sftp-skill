@@ -8,6 +8,7 @@ from mcp_locaweb_sftp.config import Settings, Site
 from mcp_locaweb_sftp.core.deploy import OperationError, backup_site, deploy, operation_lock, state_directory
 from mcp_locaweb_sftp.core.local import local_inventory
 from mcp_locaweb_sftp.core.preview import make_preview
+from mcp_locaweb_sftp.core.tokens import TokenStore
 
 
 @pytest.fixture
@@ -38,11 +39,12 @@ def seed(flow, *, nested=True):
         (local / "assets/sub/new.bin").write_bytes(bytes(range(256)) * 300)
 
 
-def execute(flow, preview_hash=None):
+def execute(flow, preview=None):
     backend, _, _, site, settings, state = flow
-    if preview_hash is None:
-        preview_hash = make_preview("example.com", site, settings, backend).digest
-    return deploy("example.com", site, settings, backend, state=state, preview_hash=preview_hash, confirm=True)
+    if preview is None:
+        preview = make_preview("example.com", site, settings, backend)
+    token = TokenStore(state).issue(preview)["preview_token"]
+    return deploy("example.com", site, settings, backend, state=state, preview_hash=preview.digest, preview_token=token, confirm=True)
 
 
 def test_end_to_end_backup_precedes_replacement_and_nothing_is_deleted(flow, monkeypatch):
@@ -73,7 +75,7 @@ def test_publication_requires_every_opt_in(flow):
                 (site, Settings(), True)]
     for current_site, current_settings, confirm in variants:
         with pytest.raises(OperationError):
-            deploy("example.com", current_site, current_settings, backend, state=state, preview_hash="a" * 64, confirm=confirm)
+            deploy("example.com", current_site, current_settings, backend, state=state, preview_hash="a" * 64, preview_token="", confirm=confirm)
     assert not state.exists()
 
 
@@ -83,15 +85,16 @@ def test_ftps_requires_administrative_preconditions(flow):
         return
     site = Site(**(site.model_dump() | {"ftps_write_preconditions_confirmed": False}))
     with pytest.raises(OperationError, match="FTPS"):
-        deploy("example.com", site, settings, backend, state=state, preview_hash="a" * 64, confirm=True)
+        deploy("example.com", site, settings, backend, state=state, preview_hash="a" * 64, preview_token="", confirm=True)
 
 
 def test_remote_newer_and_sensitive_files_block_entire_batch(flow):
     seed(flow)
     _, server, local, *_ = flow
+    previous = make_preview("example.com", flow[3], flow[4], flow[0])
     (local / ".env").write_bytes(b"test-only-sensitive")
     os.utime(server.storage / "site/index.html", (1700000020, 1700000020))
-    result = execute(flow)
+    result = execute(flow, previous)
     assert result["status"] == "conflict"
     assert result["data"]["blocked"] == (".env",)
     assert result["data"]["conflicts"] == ("index.html",)
@@ -102,8 +105,9 @@ def test_remote_newer_and_sensitive_files_block_entire_batch(flow):
 def test_per_site_blocking_is_applied(flow):
     seed(flow)
     backend, server, local, site, settings, state = flow
+    previous = make_preview("example.com", site, settings, backend)
     site = Site(**(site.model_dump() | {"blocked_paths": ["*.bin"]}))
-    result = execute((backend, server, local, site, settings, state))
+    result = execute((backend, server, local, site, settings, state), previous)
     assert result["status"] == "conflict"
     assert result["data"]["blocked"] == ("assets/sub/new.bin",)
 
@@ -112,7 +116,7 @@ def test_per_site_blocking_is_applied(flow):
 def test_changed_preview_is_rejected_before_upload(flow, change):
     seed(flow, nested=False)
     backend, server, local, site, settings, state = flow
-    digest = make_preview("example.com", site, settings, backend).digest
+    previous = make_preview("example.com", site, settings, backend)
     if change == "local":
         (local / "index.html").write_bytes(b"different local")
     elif change == "remote":
@@ -121,7 +125,7 @@ def test_changed_preview_is_rejected_before_upload(flow, change):
         settings = Settings(publish_enabled=True, timeout_seconds=20)
     else:
         site = Site(**(site.model_dump() | {"blocked_paths": ["*.sql"]}))
-    result = execute((backend, server, local, site, settings, state), digest)
+    result = execute((backend, server, local, site, settings, state), previous)
     assert result["status"] == "conflict"
     assert not list(state.rglob("deploy-result.json"))
 

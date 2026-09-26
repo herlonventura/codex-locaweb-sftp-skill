@@ -1,18 +1,18 @@
-# Skill Codex para sites Locaweb e revenda via SFTP
+# Sites via SFTP/FTPS — skill Codex, CLI Python e servidor MCP
 
-Uma skill para consultar, comparar, copiar e publicar arquivos de sites hospedados na Locaweb usando um **domínio completo** como identificador. O mesmo mecanismo serve para outros provedores SFTP/FTPS. O texto `/mcplocaweb/dominio.com.br` é uma convenção entendida pela skill; **não é um comando de barra nativo do Codex nem um servidor MCP**.
+Ferramentas para consultar, comparar, copiar e publicar arquivos de sites hospedados na Locaweb usando um **domínio completo** como identificador. O transporte também atende outros provedores SFTP/FTPS que cumpram os requisitos documentados. O texto `/mcplocaweb/dominio.com.br` é uma convenção da skill, não um comando de barra nativo. O **servidor MCP real** é um processo Python separado, documentado em [setup MCP](docs/mcp-setup.md).
 
 O projeto inclui uma skill Codex (`SKILL.md`) e dois scripts PowerShell (`scripts/`). A skill interpreta o pedido; o wrapper traduz a ação para o backend; o backend usa a biblioteca .NET do WinSCP para acessar o servidor. Cada domínio é cadastrado localmente com uma pasta de origem e uma raiz remota. A senha fica criptografada pelo DPAPI do Windows, fora deste repositório.
 
-## Migração para Python: etapas 1–4
+## Migração para Python: etapas 1–5
 
-O fluxo PowerShell descrito abaixo continua exigindo Windows. A implementação Python já tem comparação por SHA-256, SFTP/FTPS com identidade validada, configuração YAML, cofres de credenciais, migração de cadastros e CLI com aliases em português. A CLI inclui prévia, backup verificado antes de substituições, confirmação de publicação e registro de falhas parciais. Ainda não há servidor MCP nem pacote publicado no PyPI.
+O fluxo PowerShell descrito abaixo continua exigindo Windows. A implementação Python já tem comparação por SHA-256, SFTP/FTPS com identidade validada, configuração YAML, cofres de credenciais, migração de cadastros, CLI e servidor MCP via **stdio**, usando o SDK oficial. CLI e MCP compartilham prévia com token, backup verificado antes de substituições, confirmação de publicação e registro de falhas parciais. Ainda não há pacote publicado no PyPI.
 
 **Instalando do zero?** Execute `python -m mcp_locaweb_sftp configurar` no ambiente de desenvolvimento preparado no [guia da CLI](docs/cli.md). O assistente pergunta domínio, protocolo, servidor, porta, usuário e pastas. A senha é digitada somente em prompt local oculto e guardada no cofre escolhido. Não depende do FileZilla. Cada site começa com publicação desativada; o cadastro não testa conexão nem envia arquivos.
 
-Validação em Windows/Python 3.14.3: **405 testes aprovados, 95,13% de cobertura de instruções e ramos**. Inclui servidores locais SFTP/FTPS, age real e cofre do sistema simulado; não comprova execução multi-SO nem segurança integral. Nenhuma conta real foi acessada. A migração preserva a origem, desativa publicação e exige recadastro das senhas DPAPI: [configuração e credenciais](docs/configuration-credentials.md). Os resultados da suíte estão no [registro da etapa 4](docs/migration-plan.md#etapa-4-cli-e-coordenação-das-operações).
+Validação em Windows/Python 3.14.3: **443 testes aprovados, 94,16% de cobertura de instruções e ramos**. Inclui cliente MCP oficial com processo stdio, servidores locais SFTP/FTPS, disputa de token entre processos, age real e cofre do sistema simulado. Não comprova integração executada com Claude/Cursor/Zed/Codex, execução multi-SO ou segurança integral. Nenhuma conta real foi acessada. A migração preserva a origem, desativa publicação e exige recadastro das senhas DPAPI: [configuração e credenciais](docs/configuration-credentials.md). [Evidências e etapas restantes](docs/migration-plan.md).
 
-O envio exige `publish_enabled` global e por site, hash de uma prévia revisada e `--confirm`. O **token efêmero de cinco minutos ainda pertence à etapa 5**. As substituições podem deixar arquivos parciais em caso de falha; não há rollback automático nem exclusão remota. FTPS exige confirmação administrativa adicional de confinamento e ausência de escritores concorrentes. [Fluxo e recuperação](docs/cli.md) · [Limites dos transportes](docs/backends.md).
+No Python, o envio exige `publish_enabled` global e por site, hash da prévia, **token válido por cinco minutos e de uso único**, além de confirmação explícita. O token é obrigatório tanto na CLI quanto no MCP; não prova consentimento humano por si só. As substituições podem deixar arquivos parciais em caso de falha; não há rollback automático nem exclusão remota. FTPS exige confirmação administrativa adicional de confinamento e ausência de escritores concorrentes. [Fluxo e recuperação](docs/cli.md) · [Limites dos transportes](docs/backends.md).
 
 [Decisões, testes e plano das oito etapas](docs/migration-plan.md). Os scripts PowerShell continuam disponíveis durante a transição.
 

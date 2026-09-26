@@ -1,8 +1,7 @@
 """Standalone CLI. Operational results are JSON; raw exceptions are never printed."""
 
 import base64
-from contextlib import contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
@@ -17,10 +16,11 @@ from .config import ConfigError, Settings, Site, load_settings, load_sites
 from .config.schema import AgeSettings, native_path
 from .config.migration import migrate_legacy
 from .connection import open_site
-from .core.deploy import OperationError, backup_site, deploy, publication_guard
+from .core.deploy import OperationError
 from .core.guards import normalize_domain, require_registered_domain
 from .core.local import private_directory
-from .core.preview import make_preview
+from .core.tokens import TokenError
+from .operations import Runtime
 from .credentials import CredentialError, CredentialKey
 from .credentials.factory import selected_store
 from .local_files import checked_path, write_private
@@ -43,7 +43,7 @@ class SafeGroup(click.Group):
         except click.ClickException:
             click.echo(json.dumps(response("error", messages=["Argumentos inválidos. Consulte --help."])))
             code = 2
-        except (OperationError, ConfigError, CredentialError) as exc:
+        except (OperationError, ConfigError, CredentialError, TokenError) as exc:
             click.echo(json.dumps(response("error", messages=[str(exc)]), ensure_ascii=True))
             code = 1
         except (Exception, KeyboardInterrupt):
@@ -52,38 +52,6 @@ class SafeGroup(click.Group):
         if standalone:
             raise SystemExit(code)
         return code
-
-
-@dataclass(frozen=True)
-class Runtime:
-    sites_file: Path
-    settings_file: Path
-    state: Path
-
-    def site(self, domain):
-        sites = load_sites(self.sites_file)
-        domain = require_registered_domain(domain, sites)
-        return sites, domain, sites[domain], load_settings(self.settings_file)
-
-    @contextmanager
-    def edit_registry(self):
-        path = checked_path(self.sites_file)
-        if path.suffix.lower() not in (".yaml", ".yml"):
-            raise OperationError("Use migrate antes de editar o cadastro JSON legado.")
-        private_directory(path.parent)
-        lock = path.with_name(path.name + ".lock")
-        try:
-            lock.mkdir(mode=0o700)
-        except FileExistsError:
-            raise OperationError("Cadastro em edição ou trava residual; revise antes de continuar.") from None
-        try:
-            sites = load_sites(path) if path.exists() else {}
-            yield sites
-            content = yaml.safe_dump({domain: site.model_dump(mode="json") for domain, site in sorted(sites.items())},
-                                     sort_keys=False, allow_unicode=True).encode("utf-8")
-            write_private(path, content, replace=True)
-        finally:
-            checked_path(lock).rmdir()
 
 
 _home = Path.home() / ".mcp-locaweb-sftp"
@@ -265,28 +233,20 @@ def test_connection(runtime, domain):
     emit(response("success", {"domain": domain}, ["Conexão e raiz verificadas."]))
 
 
-def _analyze(runtime, domain):
-    sites, domain, site, settings = runtime.site(domain)
-    with open_site(sites, domain, settings=settings) as backend:
-        preview = make_preview(domain, site, settings, backend)
-    emit(response("conflict" if preview.comparison.has_blockers else "success", preview.summary(),
-                  ["Prévia calculada; nenhum arquivo enviado ou excluído."]))
-
-
 @cli.command("compare")
 @click.argument("domain")
 @click.pass_obj
 def compare(runtime, domain):
     """Compare conteúdo e datas, sem alterar o servidor."""
-    _analyze(runtime, domain)
+    emit(runtime.analyze(domain))
 
 
 @cli.command("preview")
 @click.argument("domain")
 @click.pass_obj
 def preview(runtime, domain):
-    """Calcule a prévia e seu hash para confirmação no deploy."""
-    _analyze(runtime, domain)
+    """Calcule a prévia e emita token de uso único válido por cinco minutos."""
+    emit(runtime.analyze(domain, issue_token=True))
 
 
 @cli.command("backup")
@@ -294,22 +254,18 @@ def preview(runtime, domain):
 @click.pass_obj
 def backup(runtime, domain):
     """Baixe e verifique os arquivos remotos na pasta privada de registros."""
-    sites, domain, site, settings = runtime.site(domain)
-    with open_site(sites, domain, settings=settings) as backend:
-        emit(backup_site(domain, site, backend, state=runtime.state))
+    emit(runtime.backup_site(domain))
 
 
 @cli.command("deploy")
 @click.argument("domain")
 @click.option("--preview-hash", required=True, help="SHA-256 retornado pela prévia revisada.")
+@click.option("--preview-token", required=True, help="Token emitido por preview; válido por cinco minutos, uso único.")
 @click.option("--confirm", is_flag=True)
 @click.pass_obj
-def deploy_command(runtime, domain, preview_hash, confirm):
+def deploy_command(runtime, domain, preview_hash, preview_token, confirm):
     """Publique a prévia confirmada, com backup e verificação; sem exclusões."""
-    sites, domain, site, settings = runtime.site(domain)
-    publication_guard(site, settings, confirm)  # no credential/network access if disabled
-    with open_site(sites, domain, settings=settings) as backend:
-        emit(deploy(domain, site, settings, backend, state=runtime.state, preview_hash=preview_hash, confirm=confirm))
+    emit(runtime.deploy_site(domain, preview_hash, preview_token, confirm))
 
 
 @cli.command("migrate")

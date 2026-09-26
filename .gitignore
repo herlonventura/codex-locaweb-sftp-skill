@@ -47,3 +47,5 @@ backup-result.json
 backup-manifest.json
 .mcp-locaweb-sftp/
 /state/
+preview-tokens/
+receipts.sqlite3*

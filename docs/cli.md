@@ -1,6 +1,6 @@
 # CLI Python — cadastro, prévia, backup e envio
 
-A CLI da etapa 4 funciona a partir do código-fonte. Não depende do FileZilla, WinSCP ou de dados já salvos no computador. A skill PowerShell existente mantém seu funcionamento anterior; ainda não foi trocada por esta CLI. O servidor MCP e o token efêmero da etapa 5 ainda não estão implementados.
+A CLI funciona a partir do código-fonte. Não depende do FileZilla, WinSCP ou de dados já salvos no computador. A skill PowerShell existente mantém seu funcionamento anterior; ainda não foi trocada por esta CLI. A etapa 5 acrescentou o [servidor MCP](mcp-setup.md) e o token efêmero obrigatório também na CLI.
 
 ## Executar a partir do repositório
 
@@ -58,9 +58,9 @@ Se o cofre falhar, o cadastro fica salvo, desativado e com `credential_status: p
 | `scan-key`, `set-key` | Consulta e registro explícito da identidade SSH |
 | `test` / `testar DOMINIO` | Testa conexão e raiz sem alterar arquivos remotos |
 | `compare` / `comparar DOMINIO` | Compara conteúdo e datas, sem envio |
-| `preview` / `previa DOMINIO` | Mesma análise, incluindo o hash da prévia |
+| `preview` / `previa DOMINIO` | Análise com hash e token de uso único, válido por cinco minutos quando não há bloqueios |
 | `backup DOMINIO` | Baixa e verifica o inventário remoto, sem alterá-lo |
-| `deploy` / `enviar DOMINIO --preview-hash HASH --confirm` | Executa a prévia confirmada, sujeito às demais travas |
+| `deploy` / `enviar DOMINIO --preview-hash HASH --preview-token TOKEN --confirm` | Executa a prévia confirmada, sujeito às demais travas |
 | `migrate` / `migrar --from ORIGEM --to DESTINO` | Expõe a migração isolada da etapa 3; não abre conexão nem migra senhas |
 
 Saídas operacionais são JSON em stdout. Perguntas ficam em stderr; ajuda é texto. Códigos de saída: `0` sucesso, `1` erro, `2` argumentos inválidos, `3` conflito, `4` falha parcial. O cadastro pode retornar sucesso com credencial pendente: leia os campos `credential_status` e `connection_tested`.
@@ -71,18 +71,20 @@ Depois de concluir e testar o cadastro, habilite explicitamente `publish_enabled
 
 ```text
 python -m mcp_locaweb_sftp previa exemplo.com.br
-python -m mcp_locaweb_sftp enviar exemplo.com.br --preview-hash HASH_DA_PREVIA_REVISADA --confirm
+python -m mcp_locaweb_sftp enviar exemplo.com.br --preview-hash HASH_DA_PREVIA_REVISADA --preview-token TOKEN_DA_PREVIA --confirm
 ```
 
-O hash SHA-256 vincula a prévia ao domínio, configuração, caminhos, inventários e hashes/datas dos arquivos. Nesta etapa ele **não é um token secreto, não expira e não é consumido**. O token de uso único válido por cinco minutos será acrescentado na etapa 5. Não integrar ainda este comando como publicação autônoma por IA.
+O hash SHA-256 vincula a prévia ao domínio, configuração, caminhos, inventários e hashes/datas dos arquivos. O token aleatório adicional é exigido no envio, vale por **300 segundos** e só pode ser consumido uma vez, inclusive entre processos. Não o grave no Git, scripts ou logs. Em uso interativo, prefira passar o valor por variável temporária do terminal; ele continua podendo ser observado por processos locais autorizados. Nenhuma senha deve ser passada por argumento.
+
+CLI e MCP usam os mesmos recibos privados em `state/preview-tokens/receipts.sqlite3`, que guardam somente o hash do token. A CLI Python anterior que usava apenas hash e `--confirm` agora requer também `--preview-token`; o fluxo PowerShell legado não mudou. [Validade, consumo e limitações do token](mcp-setup.md#prévia-e-token-de-cinco-minutos).
 
 O fluxo atual:
 
 1. Exige confirmação e as flags de publicação antes de ler a credencial na CLI.
-2. Adquire trava local por protocolo/servidor/porta e recalcula a prévia. Qualquer conflito, arquivo bloqueado ou divergência de hash impede o lote inteiro.
+2. Adquire trava local por protocolo/servidor/porta, consome o token atomicamente e recalcula a prévia. Qualquer conflito, arquivo bloqueado ou divergência de hash impede o lote inteiro. O token consumido não é devolvido em caso de falha.
 3. Cria registro privado e copia os arquivos locais aprovados para um snapshot, verificando seus hashes.
 4. Baixa e verifica **todos** os originais que serão substituídos antes de iniciar qualquer upload.
-5. Recalcula a prévia após o backup. Revalida snapshot e backup em disco antes de cada envio.
+5. Recalcula a prévia após o backup e confere a validade do token antes de iniciar mutações. Revalida snapshot e backup em disco antes de cada envio.
 6. Registra intenção de criar diretório/enviar arquivo antes da operação; verifica novamente o estado anterior do arquivo remoto antes de substituir.
 7. Lê o conteúdo remoto após o envio e confere SHA-256. Só então acrescenta o arquivo à lista `uploaded`.
 

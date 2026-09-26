@@ -3,3 +3,4 @@ pydantic>=2.10,<3
 PyYAML>=6,<7
 keyring>=25,<27
 click>=8.1,<9
+mcp>=2.2,<3

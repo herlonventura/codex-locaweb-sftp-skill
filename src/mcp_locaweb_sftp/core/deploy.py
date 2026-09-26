@@ -14,6 +14,7 @@ from .backup import backup_files
 from .checksum import normalize_sha256
 from .local import private_directory, read_local, snapshot_local
 from .preview import make_preview
+from .tokens import TokenStore
 
 
 class OperationError(ValueError):
@@ -58,15 +59,17 @@ def create_run(state, domain):
     return run
 
 
-def deploy(domain, site, settings, backend, *, state, preview_hash, confirm=False):
+def deploy(domain, site, settings, backend, *, state, preview_hash, preview_token, confirm=False):
     publication_guard(site, settings, confirm)
     approved = normalize_sha256(preview_hash)
     state = state_directory(site, state)
     with operation_lock(state, site):
+        lease = TokenStore(state).consume(domain, approved, preview_token)
         current = make_preview(domain, site, settings, backend)
         if current.comparison.has_blockers or current.digest != approved:
             return response("conflict", current.summary(), ["Prévia mudou ou contém arquivos bloqueados/conflitos; nenhum envio realizado."])
         if not current.comparison.upload_paths:
+            lease.require_fresh()
             return response("success", current.summary(), ["Nenhuma alteração para enviar."])
         run = create_run(state, current.domain)
         journal = run / "deploy-result.json"
@@ -89,6 +92,7 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, confirm=Fals
             save_record(journal, record)
             if make_preview(domain, site, settings, backend).digest != approved:
                 raise IntegrityError("Preview changed after backup.")
+            lease.require_fresh()  # Slow comparison/backup must not extend authorization.
             for entry in candidates:
                 # Check approved bytes and the backup from disk before any
                 # mutation for this file; do not rely on an in-memory receipt.
@@ -104,6 +108,8 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, confirm=Fals
                         continue
                     info = backend.stat_path(relative)
                     if info is None:
+                        if not data["remote_mutation_started"]:
+                            lease.require_fresh()
                         data.update(active=relative, phase="mkdir", remote_mutation_started=True)
                         save_record(journal, record)
                         backend.mkdir(relative)
@@ -111,6 +117,8 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, confirm=Fals
                         save_record(journal, record)
                     elif info.kind != "dir":
                         raise UnsafeRemotePath("A required directory is not a directory.")
+                if not data["remote_mutation_started"]:
+                    lease.require_fresh()
                 data.update(active=entry.path, phase="upload", remote_mutation_started=True)
                 save_record(journal, record)  # Write-ahead evidence survives a forced termination.
                 with checked_path(run / "sources" / entry.path).open("rb") as source:

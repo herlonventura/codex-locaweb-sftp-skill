@@ -36,10 +36,18 @@ def test_cli_real_preview_deploy_and_second_comparison(cli_environment):
     preview = runner.invoke(cli, args + ["previa", "example.com"])
     assert preview.exit_code == 0, preview.output
     digest = json.loads(preview.stdout)["data"]["preview_hash"]
-    result = runner.invoke(cli, args + ["enviar", "example.com", "--preview-hash", digest, "--confirm"])
+    token = json.loads(preview.stdout)["data"]["preview_token"]
+    attempts = server.auth_attempts
+    missing_token = runner.invoke(cli, args + ["enviar", "example.com", "--preview-hash", digest, "--confirm"])
+    assert missing_token.exit_code == 2 and server.auth_attempts == attempts
+    result = runner.invoke(cli, args + ["enviar", "example.com", "--preview-hash", digest, "--preview-token", token, "--confirm"])
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["status"] == "success"
     assert (server.storage / "site/index.html").read_bytes() == b"new"
+    attempts = server.auth_attempts
+    reused = runner.invoke(cli, args + ["enviar", "example.com", "--preview-hash", digest, "--preview-token", token, "--confirm"])
+    assert reused.exit_code == 1 and server.auth_attempts == attempts
+    assert token not in reused.output
     compared = runner.invoke(cli, args + ["comparar", "example.com"])
     assert json.loads(compared.stdout)["data"]["equal"] == ["index.html"]
 
@@ -67,7 +75,7 @@ def test_cli_unknown_domain_and_invalid_arguments_never_echo_private_values(cli_
 def test_disabled_publication_is_rejected_before_auth(cli_environment):
     runner, args, server, _, _, settings = cli_environment
     settings.write_text("publish_enabled: false\n", encoding="utf-8")
-    result = runner.invoke(cli, args + ["deploy", "example.com", "--preview-hash", "a" * 64, "--confirm"])
+    result = runner.invoke(cli, args + ["deploy", "example.com", "--preview-hash", "a" * 64, "--preview-token", "x" * 43, "--confirm"])
     assert result.exit_code == 1
     assert server.auth_attempts == 0
 
