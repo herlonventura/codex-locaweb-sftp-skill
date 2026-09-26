@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check():
     wheels = list((ROOT / "dist").glob("*.whl"))
-    sources = list((ROOT / "dist").glob("*.tar.gz"))
+    sources = list((ROOT / "dist").glob("mcp_locaweb_sftp-*.tar.gz"))
     assert len(wheels) == len(sources) == 1, "Expected exactly one wheel and source archive"
     source_files = {p.relative_to(ROOT).as_posix() for p in (ROOT / "src").rglob("*.py")}
     with zipfile.ZipFile(wheels[0]) as archive:

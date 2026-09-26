@@ -45,7 +45,7 @@ jobs:
         run: python packaging/check_install.py --frozen
       - name: Archive native distribution
         if: matrix.python == '3.11'
-        run: python -c "import shutil; shutil.make_archive('dist/native-${{ runner.os }}-${{ runner.arch }}', 'zip', 'dist/bin')"
+        run: python -c "import shutil, sys; shutil.make_archive('dist/native-${{ runner.os }}-${{ runner.arch }}', 'zip' if sys.platform == 'win32' else 'gztar', 'dist/bin')"
       - uses: actions/upload-artifact@v4
         if: matrix.python == '3.11'
         with:
