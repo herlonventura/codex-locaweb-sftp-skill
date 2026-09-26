@@ -1,5 +1,7 @@
 # Recuperar uma operação interrompida
 
+A [retenção automática](retention.md) preserva execuções com falha/parciais e backups completos. Remove somente execuções antigas concluídas com sucesso, mantendo três por domínio. Consulte `data.retention` e as mensagens do último envio: falha na limpeza local não significa falha do upload e não autoriza repeti-lo.
+
 O sistema não oferece restauração ou rollback automático. Este procedimento orienta a inspeção; não autoriza alteração no servidor. Backup de arquivos não inclui banco de dados nem equivale a snapshot simultâneo da hospedagem.
 
 ## Descobrir o resultado

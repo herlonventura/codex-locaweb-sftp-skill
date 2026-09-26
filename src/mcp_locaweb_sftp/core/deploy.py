@@ -4,6 +4,7 @@ from contextlib import contextmanager, suppress
 import hashlib
 import json
 from pathlib import PurePosixPath
+import time
 import uuid
 
 from ..backends.base import IntegrityError, UnsafeRemotePath
@@ -14,6 +15,7 @@ from .backup import backup_files
 from .checksum import normalize_sha256
 from .local import private_directory, read_local, snapshot_local
 from .preview import make_preview
+from .retention import KEEP_DEPLOYS, cleanup_successful_deploys
 from .tokens import TokenStore
 
 
@@ -130,6 +132,7 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, preview_toke
                 data["active"] = None
                 save_record(journal, record)
             data["phase"] = "complete"
+            data["completed_at_ns"] = time.time_ns()
             record = response("success", data, ["Envio verificado por SHA-256; nenhuma exclusão remota."])
             save_record(journal, record)
         except (Exception, KeyboardInterrupt):
@@ -138,6 +141,20 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, preview_toke
             # If the disk failed, the last durable write-ahead record remains.
             with suppress(OSError, ValueError):
                 save_record(journal, record)
+        if record["status"] == "success":
+            # The success journal must already be durable. Cleanup failure must
+            # never relabel a verified upload as partial or ask clients to resend.
+            try:
+                data["retention"] = cleanup_successful_deploys(state, current.domain, run)
+                if data["retention"]["skipped"]:
+                    record["messages"].append("Limpeza local incompleta; algumas cópias foram preservadas para revisão.")
+            except (Exception, KeyboardInterrupt):
+                data["retention"] = {"keep_successful_deploys": KEEP_DEPLOYS, "status": "incomplete"}
+                record["messages"].append("Envio concluído; limpeza local não concluída. Revise os registros antes de remover cópias.")
+            try:
+                save_record(journal, record)
+            except (OSError, ValueError):
+                record["messages"].append("Não foi possível registrar o resultado da limpeza; o sucesso do envio já havia sido salvo.")
         return record
 
 

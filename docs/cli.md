@@ -87,6 +87,7 @@ O fluxo atual:
 5. Recalcula a prévia após o backup e confere a validade do token antes de iniciar mutações. Revalida snapshot e backup em disco antes de cada envio.
 6. Registra intenção de criar diretório/enviar arquivo antes da operação; verifica novamente o estado anterior do arquivo remoto antes de substituir.
 7. Lê o conteúdo remoto após o envio e confere SHA-256. Só então acrescenta o arquivo à lista `uploaded`.
+8. Salva o sucesso do envio e aplica a retenção local: mantém as três últimas execuções concluídas por domínio, removendo as cópias das mais antigas. Backups completos, falhas e execuções parciais são preservados. Erro de limpeza gera aviso sem invalidar o envio.
 
 Não há exclusão remota, remoção de arquivo parcial nem rollback automático. Hashes iguais dispensam envio. Arquivo diferente com data remota igual/mais recente, incluindo tolerância de dois segundos, bloqueia o lote. Regras adicionais de bloqueio por site somam-se à lista mínima.
 
@@ -100,7 +101,7 @@ Por padrão, cada execução fica em `~/.mcp-locaweb-sftp/state/runs/DOMINIO/ID/
 - `backup/backup-manifest.json`: recibo de hash dos **arquivos selecionados**, não atestado independente de um snapshot completo e simultâneo do servidor.
 - `backup-result.json`: resultado final do comando de backup completo. Exija `status: success`; um manifesto isolado não substitui esse resultado.
 
-O backup automático do envio contém somente as versões remotas dos arquivos que serão substituídos. Arquivos novos não têm versão anterior; arquivos remotos sem alteração não são copiados para esse backup. `sources/` guarda também as versões locais aprovadas para envio. O comando separado `backup` copia o inventário remoto permitido pelas regras da ferramenta. **Não existe limpeza automática dos registros, backups ou snapshots:** um novo envio não apaga as execuções anteriores.
+O backup automático do envio contém somente as versões remotas dos arquivos que serão substituídos. Arquivos novos não têm versão anterior; arquivos remotos sem alteração não são copiados para esse backup. `sources/` guarda também as versões locais aprovadas para envio. O comando separado `backup` copia o inventário remoto permitido pelas regras da ferramenta. **Após sucesso, a retenção mantém três execuções de envio por domínio**, incluindo backups, snapshots e diários dessas três. Backups completos e falhas ficam fora dessa limpeza. [Escopo, exceções e avisos de retenção](retention.md).
 
 Se o processo morrer ou faltar disco depois da escrita remota, o último registro durável pode conter apenas a intenção de envio. `partial` é conservador: pode significar escrita parcial, envio concluído sem registro final ou tentativa cujo resultado precisa ser verificado. Não repetir cegamente. Consulte o servidor e o backup, gere uma nova comparação e resolva os conflitos antes de reenviar. Restauração é manual e exige uma decisão separada.
 

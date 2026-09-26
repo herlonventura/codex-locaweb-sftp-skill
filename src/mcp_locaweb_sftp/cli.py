@@ -264,7 +264,7 @@ def backup(runtime, domain):
 @click.option("--confirm", is_flag=True)
 @click.pass_obj
 def deploy_command(runtime, domain, preview_hash, preview_token, confirm):
-    """Publique a prévia confirmada, com backup e verificação; sem exclusões."""
+    """Publique com backup/verificação; retenha três envios, sem exclusões remotas."""
     emit(runtime.deploy_site(domain, preview_hash, preview_token, confirm))
 
 

@@ -79,6 +79,75 @@ def test_publication_requires_every_opt_in(flow):
     assert not state.exists()
 
 
+def test_five_real_deploys_keep_last_three_and_explicit_backup(flow):
+    seed(flow, nested=False)
+    backend, server, local, site, _, state = flow
+    full = backup_site('example.com', site, backend, state=state)
+    full_run = Path(full['data']['run_directory'])
+    runs = []
+    for version in range(5):
+        (local / 'index.html').write_text(f'version {version}')
+        os.utime(server.storage / 'site/index.html', (1700000000, 1700000000))
+        os.utime(local / 'index.html', (1700000010, 1700000010))
+        result = execute(flow)
+        assert result['status'] == 'success'
+        assert result['data']['retention']['skipped'] == 0
+        runs.append(Path(result['data']['run_directory']))
+    assert not any(run.exists() for run in runs[:2])
+    assert all(run.exists() for run in runs[2:])
+    assert full_run.exists()
+    assert (full_run / 'backup/files/keep.txt').read_bytes() == b'do not delete'
+    assert (runs[2] / 'backup/files/index.html').read_text() == 'version 1'
+    assert (server.storage / 'site/index.html').read_text() == 'version 4'
+
+
+def test_retention_failure_does_not_invalidate_success(flow, monkeypatch):
+    seed(flow, nested=False)
+    def fail(*args):
+        raise OSError('sensitive detail not for output')
+    monkeypatch.setattr('mcp_locaweb_sftp.core.deploy.cleanup_successful_deploys', fail)
+    result = execute(flow)
+    assert result['status'] == 'success'
+    assert result['data']['retention']['status'] == 'incomplete'
+    assert 'sensitive detail' not in json.dumps(result)
+    journal = Path(result['data']['run_directory']) / 'deploy-result.json'
+    assert json.loads(journal.read_text())['status'] == 'success'
+
+
+def test_failed_or_noop_deploy_does_not_run_retention(flow, monkeypatch):
+    seed(flow, nested=False)
+    def unexpected(*args):
+        pytest.fail('Cleanup must not run')
+    monkeypatch.setattr('mcp_locaweb_sftp.core.deploy.cleanup_successful_deploys', unexpected)
+    (flow[2] / 'index.html').write_bytes(b'previous longer version')
+    assert execute(flow)['status'] == 'success'  # Nothing changed.
+    (flow[2] / 'index.html').write_bytes(b'new')
+    os.utime(flow[2] / 'index.html', (1700000010, 1700000010))
+    def fail_backup(*args):
+        raise OSError('simulated disk failure')
+    monkeypatch.setattr('mcp_locaweb_sftp.core.deploy.backup_files', fail_backup)
+    assert execute(flow)['status'] == 'error'
+
+
+@pytest.mark.parametrize('fail_journal', [False, True])
+def test_retention_warning_or_journal_failure_preserves_saved_upload_success(flow, monkeypatch, fail_journal):
+    seed(flow, nested=False)
+    from mcp_locaweb_sftp.core import deploy as coordinator
+    original = coordinator.save_record
+    def write(path, record):
+        if fail_journal and 'retention' in record.get('data', {}):
+            raise OSError('cleanup report unavailable')
+        original(path, record)
+    monkeypatch.setattr(coordinator, 'save_record', write)
+    monkeypatch.setattr(coordinator, 'cleanup_successful_deploys',
+                        lambda *args: {'keep_successful_deploys': 3, 'removed_runs': [], 'skipped': 1})
+    result = execute(flow)
+    assert result['status'] == 'success'
+    assert len(result['messages']) >= 2
+    journal = Path(result['data']['run_directory']) / 'deploy-result.json'
+    assert json.loads(journal.read_text())['status'] == 'success'
+
+
 def test_ftps_requires_administrative_preconditions(flow):
     backend, _, _, site, settings, state = flow
     if site.protocol != "ftps":

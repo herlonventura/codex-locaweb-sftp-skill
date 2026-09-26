@@ -43,7 +43,7 @@ O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e p
 
 [Detalhes dos testes](docs/testing.md) · [Matriz de distribuição](docs/distribution.md) · [Registro das oito etapas e pendências](docs/migration-plan.md).
 
-[Validação adicional Windows/Codex](docs/validation-windows-codex.md): backup automático somente dos arquivos substituídos, envio de arquivo novo, token sem reutilização e remoção da credencial temporária. Não há limpeza automática dos backups; comparação por hash ainda exige leitura dos arquivos remotos.
+[Validação adicional Windows/Codex](docs/validation-windows-codex.md): backup automático somente dos arquivos substituídos, envio de arquivo novo, token sem reutilização e remoção da credencial temporária. A [retenção automática](docs/retention.md) mantém os três últimos envios concluídos por domínio, preservando backups completos e falhas. Comparação por hash ainda exige leitura dos arquivos remotos.
 
 ## Usar a CLI
 

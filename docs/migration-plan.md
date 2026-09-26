@@ -141,6 +141,8 @@ Nenhum código de produção, script legado ou instalação de cliente foi modif
 
 ## Sequência aceita
 
+Melhoria posterior autorizada: [retenção automática de três envios concluídos por domínio](retention.md), comum à CLI e ao MCP Python. Dispara apenas após sucesso persistido; preserva backups completos, falhas e demais domínios. Exclui somente pastas locais antigas elegíveis, com verificação de caminhos/links e diário removido por último. Falhas de limpeza retornam aviso sem incentivar reenvio. [Evidência de testes](testing.md#retenção-automática-após-as-oito-etapas). Não altera os scripts PowerShell nem limpa instalações operacionais durante o desenvolvimento.
+
 Validação posterior às oito etapas: [cofre Windows, backup seletivo e descoberta no Codex](validation-windows-codex.md). O registro distingue chamadas pelo SDK de descoberta pelo App Server; não equivale a homologação da interface desktop. Nenhuma configuração operacional foi modificada.
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.

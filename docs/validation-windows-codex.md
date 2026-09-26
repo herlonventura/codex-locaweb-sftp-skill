@@ -32,7 +32,7 @@ python -m pytest -q tests/test_deploy.py -k 'backup_precedes or backup_failure_p
 ## Interpretação e limites
 
 - **Backup automático do deploy é seletivo:** salva os originais dos arquivos que serão substituídos. Os arquivos locais enviados também ficam em `sources/` para garantir o conteúdo aprovado. Não há cópia automática integral do site.
-- **Não há limpeza automática por idade ou quantidade.** Cada execução preserva suas cópias e registros. Uma política de retenção continua sendo melhoria futura; não deve ser presumida a partir desta validação.
+- **Na versão deste teste ainda não havia limpeza automática.** Uma alteração posterior acrescentou [retenção de três envios concluídos por domínio](retention.md), com testes próprios. Não atribua essa validação à execução histórica descrita aqui.
 - A comparação calcula SHA-256 lendo o conteúdo remoto, inclusive de arquivos que acabarão sem alterações. Portanto, backup seletivo economiza armazenamento, mas não significa tráfego limitado aos arquivos enviados. Sites grandes continuam sujeitos ao custo de inventário/revalidações.
 - O teste com credencial real no cofre foi do pacote instalado, não do binário PyInstaller. Linux/macOS e outras contas/máquinas Windows continuam sem validação de cofre real.
 - No Codex foi testada **inicialização e descoberta via App Server**, sem turno de modelo e sem criar chat. As operações de arquivo foram chamadas pelo cliente oficial do SDK MCP. Isso não comprova o fluxo de aprovação na interface desktop nem interpretação de pedidos em linguagem natural.

@@ -69,3 +69,9 @@ O cancelamento cooperativo do cliente também não equivale a desfazer a publica
 - Os novos cenários não exigiram alteração do código de produção. A etapa acrescenta evidências e reutiliza fixtures; não amplia permissões nem modifica a instalação operacional.
 
 Os números por entrega e as dependências utilizadas estão no [registro das etapas](migration-plan.md). Cobertura maior que 80% é uma condição de validação, não demonstração de ausência de falhas.
+
+## Retenção automática após as oito etapas
+
+[Política de três envios por domínio](retention.md): os novos testes cobrem cinco envios reais em SFTP/FTPS com preservação de backup completo; erros, registros inválidos, outros domínios, relógio regressivo, hard links, reparse points, exclusão local interrompida e nova tentativa. Falha na limpeza ou na gravação do seu resultado não invalida o sucesso do upload já salvo.
+
+Validação local Windows/Python 3.14.3: **489 aprovados e um skip**, cobertura de instruções/ramos **94,76%**, com age real. O skip é a criação de link simbólico sem privilégio no Windows; o teste de reparse point simulado e o de hard link real passaram. Quatro cenários adicionais de aviso/falha do diário da limpeza passaram depois; os 49 testes CLI/MCP também passaram após a atualização das descrições. Os testes apagam somente execuções fictícias em diretórios temporários; nenhuma limpeza operacional foi executada.

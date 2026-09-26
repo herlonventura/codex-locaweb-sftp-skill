@@ -54,7 +54,7 @@ TOOL_DEFINITIONS = {
     "compare_site": (DomainArgs, "Compara arquivos locais/remotos; não emite autorização de envio.", True, True),
     "preview_deploy": (DomainArgs, "Calcula prévia e token de uso único válido por 5 minutos. Mostre a prévia ao usuário antes de enviar.", False, False),
     "backup_site": (DomainArgs, "Baixa backup verificado para a pasta privada configurada; não altera o servidor.", False, False),
-    "deploy_site": (DeployArgs, "Envia somente a prévia autorizada. Exige token, hash, publicação habilitada e confirm=true após autorização explícita do usuário. Nunca exclui arquivos.", False, False),
+    "deploy_site": (DeployArgs, "Envia somente a prévia autorizada. Exige token, hash, publicação habilitada e confirm=true após autorização explícita do usuário. Não exclui arquivos remotos. Após sucesso, mantém os três últimos envios concluídos por domínio e remove as cópias locais dos mais antigos; preserva backups completos e falhas.", False, False),
     "register_site": (RegisterArgs, "Cadastra domínio novo, desativado e sem senha. Fingerprint/CA e habilitação de envio devem ser configuradas localmente.", False, False),
 }
 
