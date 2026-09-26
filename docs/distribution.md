@@ -1,5 +1,11 @@
 # Instalação e distribuição Python
 
+## Pré-versão 0.1.0a2
+
+[CI 36280611660](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/actions/runs/36280611660), commit `360a45b1f79f66ca6a82ed59192987ccec34c5c4`: **sete jobs aprovados**, 498 testes em cada combinação de Windows/Linux/macOS com Python 3.11 e 3.14. Cobertura de 94,96% a 95,26%. Pacote instalado, binários nos três sistemas e Docker também passaram. [Downloads permanentes da pré-versão](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/releases/tag/v0.1.0a2) e [guia de pacotes/checksums](releases.md).
+
+Os números e artefatos abaixo registram a matriz anterior da mudança de marca; os pacotes da release acima são da revisão 0.1.0a2.
+
 Versão inicial de desenvolvimento: `0.1.0a1`. O pacote se chama `vhe-deploy` e requer Python 3.11 ou superior. Não foi publicado no PyPI nem em registro de contêineres.
 
 ## Evidência do VHE Deploy — 26/09/2026
