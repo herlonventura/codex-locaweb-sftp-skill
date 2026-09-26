@@ -35,13 +35,15 @@ O assistente pergunta domínio, protocolo, servidor, porta, usuário, pastas e p
 | CLI e MCP stdio | Cliente oficial do SDK, processos reais e servidores locais SFTP/FTPS |
 | Windows, Linux e macOS | Matriz executada; outras versões/arquiteturas e WSL não foram testados |
 | Credenciais age | Criptografia real com identidades temporárias |
-| Cofres nativos | Comportamento simulado; integração real com cada cofre ainda não homologada |
-| Aplicativos de IA | Exemplos documentados; não homologados dentro dos aplicativos |
+| Cofres nativos | Cofre real Windows validado com credencial fictícia e MCP instalado; Linux/macOS simulados |
+| Aplicativos de IA | Codex App Server reconheceu as sete ferramentas; interfaces e aprovações ainda não homologadas |
 | Docker | Build, usuário não-root, CLI, age e MCP stdio; sem deploy a hospedagem real |
 | Falhas e recuperação | Concorrência, processo interrompido, registro parcial, backup preservado e retomada com conflito |
 | Instalação operacional | Não migrada nem modificada por esses testes |
 
 [Detalhes dos testes](docs/testing.md) · [Matriz de distribuição](docs/distribution.md) · [Registro das oito etapas e pendências](docs/migration-plan.md).
+
+[Validação adicional Windows/Codex](docs/validation-windows-codex.md): backup automático somente dos arquivos substituídos, envio de arquivo novo, token sem reutilização e remoção da credencial temporária. Não há limpeza automática dos backups; comparação por hash ainda exige leitura dos arquivos remotos.
 
 ## Usar a CLI
 
@@ -108,7 +110,7 @@ python -m pytest -q --ignore=tests/test_distribution.py --cov=mcp_locaweb_sftp -
 
 Para os testes criptográficos, instale age/age-keygen ou configure `MCP_LOCAWEB_TEST_AGE`; sem eles, há skips. Os testes de distribuição precisam dos comandos empacotados e rodam separadamente pelo procedimento em [distribuição](docs/distribution.md). Não execute testes contra cadastros reais.
 
-A documentação da etapa 8 não executou migração de produção nem configurou aplicativos locais. PyPI, homologação dentro dos aplicativos, cofres nativos reais e definição de licença permanecem pendentes; não confunda a conclusão das oito etapas com essas validações adicionais.
+A documentação da etapa 8 não executou migração de produção nem configurou aplicativos locais. A validação adicional cobriu o cofre real Windows e a descoberta no Codex App Server. PyPI, homologação das interfaces dos aplicativos, cofres reais Linux/macOS e definição de licença permanecem pendentes; não confunda a conclusão das oito etapas com essas validações adicionais.
 
 ## Dados privados e licença
 

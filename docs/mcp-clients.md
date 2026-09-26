@@ -1,6 +1,6 @@
 # Configurar o MCP no seu cliente de IA
 
-Os exemplos abaixo seguem documentações oficiais consultadas em **26/09/2026**. A sintaxe e os argumentos dos exemplos foram conferidos; o servidor foi testado com o cliente oficial do SDK MCP. **Não houve homologação dentro de Claude Desktop, Cursor, Zed, VS Code, Continue ou Codex.** Menus, suporte a ferramentas e políticas da organização podem variar conforme a versão instalada.
+Os exemplos abaixo seguem documentações oficiais consultadas em **26/09/2026**. A sintaxe e os argumentos dos exemplos foram conferidos; o servidor foi testado com o cliente oficial do SDK MCP. O [Codex App Server reconheceu as sete ferramentas em teste local](validation-windows-codex.md). **As interfaces e aprovações de Claude Desktop, Cursor, Zed, VS Code, Continue e Codex continuam sem homologação.** Menus, suporte a ferramentas e políticas da organização podem variar conforme a versão instalada.
 
 ## Preparação comum
 

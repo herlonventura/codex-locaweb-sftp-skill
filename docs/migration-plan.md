@@ -131,8 +131,8 @@ Nenhum código de produção, script legado ou instalação de cliente foi modif
 |---|---|
 | Execução Linux/macOS/Windows | Comprovada pela matriz da etapa 7 |
 | Integração MCP no protocolo stdio | Comprovada com cliente oficial do SDK e processos instalados/congelados |
-| Claude Desktop, Cursor, Zed, VS Code, Continue e Codex | Exemplos documentados; homologação dentro de cada aplicativo pendente |
-| Keyring nativo em cada SO | Seleção/comportamento testados com simulação; cofres reais pendentes |
+| Claude Desktop, Cursor, Zed, VS Code, Continue e Codex | Codex App Server: inicialização e sete ferramentas reconhecidas; interfaces/aprovações pendentes |
+| Keyring nativo em cada SO | Windows real com credencial fictícia e MCP instalado aprovado; Linux/macOS simulados |
 | WSL e outras versões/arquiteturas | Não executados |
 | Publicação no PyPI e em registro de contêineres | Não realizada; instalação disponível por fonte/wheel e build Docker |
 | Licença de redistribuição do projeto | Não definida pelo autor; não foi inventada uma licença |
@@ -140,6 +140,8 @@ Nenhum código de produção, script legado ou instalação de cliente foi modif
 | Senhas DPAPI | Recadastro necessário, sem exportação/descriptografia automática |
 
 ## Sequência aceita
+
+Validação posterior às oito etapas: [cofre Windows, backup seletivo e descoberta no Codex](validation-windows-codex.md). O registro distingue chamadas pelo SDK de descoberta pelo App Server; não equivale a homologação da interface desktop. Nenhuma configuração operacional foi modificada.
 
 1. **Núcleo puro — concluído.** Domínios, checksum, comparação e guards; preservar o fluxo Windows e apresentar resultados de testes antes de prosseguir.
 2. **Backends + servidor SFTP simulado — concluído.** SFTP/Paramiko e FTPS/ftplib com interface comum, fingerprint SSH confirmada e certificado TLS validado. Fixture baseada em `paramiko.ServerInterface` pronta para as etapas 3–5; acrescentado servidor FTPS local. SHA-256 remoto calculado pela leitura integral do conteúdo: erro de leitura/verificação impede sucesso. Limites de FTPS documentados.

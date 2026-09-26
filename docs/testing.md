@@ -64,7 +64,7 @@ O cancelamento cooperativo do cliente também não equivale a desfazer a publica
 - O encerramento abrupto exercita perda do processo, não corte de energia, falha de disco físico ou garantia de recuperação de desastre.
 - A disputa de trava foi testada com a mesma pasta de estado. Outras máquinas, clientes FTP independentes e aplicações remotas não são bloqueados por essa trava.
 - O servidor FTPS simulado atende às precondições de confinamento e ausência de escritores externos. Isso não comprova que um provedor real as atenda.
-- Não houve integração executada em Claude Desktop, Cursor, Zed ou Codex. O teste de interoperabilidade usa o cliente oficial do SDK MCP.
+- Na etapa 6, o teste de interoperabilidade usou o cliente oficial do SDK MCP. A [validação posterior Windows/Codex](validation-windows-codex.md) comprovou cofre real Windows e descoberta das sete ferramentas pelo Codex App Server. Interfaces e aprovações dos aplicativos continuam pendentes.
 - Na entrega da etapa 6, a execução comprovada era Windows/Python 3.14.3. A etapa 7 acrescentou CI em Windows/Linux/macOS com Python 3.11 e 3.14, instalação e binários: [evidências de distribuição](distribution.md). Os números acima preservam o registro da etapa 6.
 - Os novos cenários não exigiram alteração do código de produção. A etapa acrescenta evidências e reutiliza fixtures; não amplia permissões nem modifica a instalação operacional.
 

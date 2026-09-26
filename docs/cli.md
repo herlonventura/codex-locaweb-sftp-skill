@@ -100,6 +100,8 @@ Por padrão, cada execução fica em `~/.mcp-locaweb-sftp/state/runs/DOMINIO/ID/
 - `backup/backup-manifest.json`: recibo de hash dos **arquivos selecionados**, não atestado independente de um snapshot completo e simultâneo do servidor.
 - `backup-result.json`: resultado final do comando de backup completo. Exija `status: success`; um manifesto isolado não substitui esse resultado.
 
+O backup automático do envio contém somente as versões remotas dos arquivos que serão substituídos. Arquivos novos não têm versão anterior; arquivos remotos sem alteração não são copiados para esse backup. `sources/` guarda também as versões locais aprovadas para envio. O comando separado `backup` copia o inventário remoto permitido pelas regras da ferramenta. **Não existe limpeza automática dos registros, backups ou snapshots:** um novo envio não apaga as execuções anteriores.
+
 Se o processo morrer ou faltar disco depois da escrita remota, o último registro durável pode conter apenas a intenção de envio. `partial` é conservador: pode significar escrita parcial, envio concluído sem registro final ou tentativa cujo resultado precisa ser verificado. Não repetir cegamente. Consulte o servidor e o backup, gere uma nova comparação e resolva os conflitos antes de reenviar. Restauração é manual e exige uma decisão separada.
 
 Uma interrupção forçada pode deixar a trava local. Confirme que não há processo executando antes de remover essa trava manualmente. O programa não a remove automaticamente por idade.
