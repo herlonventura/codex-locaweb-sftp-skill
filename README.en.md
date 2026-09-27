@@ -2,11 +2,21 @@
 
 [Português](README.md) · [Downloads](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/releases) · [MIT license](LICENSE)
 
+**Update your website files with an AI assistant: review the preview, authorize the transfer, and keep a backup of replaced files.**
+
+[![Illustrative VHE Deploy workflow: preview, backup and authorized deployment](docs/media/workflow.gif)](docs/demo.md#english)
+
+[Get started](#quick-start) · [Watch the 42-second overview](docs/demo.md#english) · [Join the early testers](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/discussions/1)
+
+*Illustrative graphics with fictional data, not a recording of an application's interface. This is an alpha: start with a test site.*
+
 Deploy website files over SFTP or explicit FTPS from a CLI or an AI assistant through Model Context Protocol (MCP). Preview changes, back up files before replacement, and verify transfers with SHA-256. Works with compatible hosting providers; it does not manage DNS, email accounts, hosting panels, or databases.
 
 **Pre-release: 0.1.0a2.** Python 3.11+ source installation, or portable native bundles for Windows X64, Linux X64 and macOS ARM64. Native bundles are unsigned development builds; no MSI/setup wizard, PyPI package or hosted MCP service is provided.
 
 ## Quick start
+
+You can give this repository URL to an AI assistant with access to your computer and ask it to read the documentation and help install VHE Deploy for a test site, without publishing any files yet. Enter passwords in the terminal, never in the chat. Integration depends on the application's capabilities and permissions.
 
 ```sh
 git clone https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp.git

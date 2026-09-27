@@ -2,6 +2,14 @@
 
 [English](README.en.md) · [Downloads](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/releases) · [Licença MIT](LICENSE)
 
+**Atualize os arquivos do seu site com ajuda da IA: confira a prévia, autorize o envio e preserve uma cópia dos arquivos substituídos.**
+
+[![Fluxo ilustrativo do VHE Deploy: conferir a prévia, fazer backup e enviar as alterações autorizadas](docs/media/workflow.gif)](docs/demo.md)
+
+[Começar a instalação](#começar) · [Ver o vídeo de 42 segundos](docs/demo.md) · [Participar dos primeiros testes](https://github.com/herlonventura/vhe-deploy-sftp-ftps-mcp/discussions/1)
+
+*Demonstração gráfica ilustrativa, com dados fictícios; não é uma gravação da interface de um aplicativo. Projeto em versão alpha: experimente primeiro em um site de teste.*
+
 Deploy website files with an AI assistant or CLI: preview changes, create verified backups, and transfer files over SFTP/FTPS using Model Context Protocol (MCP).
 
 Comandos oficiais: **`vhe-deploy`** e **`vhe-deploy-mcp`**. A marca identifica a ferramenta, sem limitar o provedor de hospedagem. [Mudança de nome e configuração](docs/vhe-deploy.md).
@@ -13,6 +21,8 @@ Pré-versão: **0.1.0a2**. [Pacotes portáteis e checksums](docs/releases.md). G
 A skill e os scripts PowerShell anteriores permanecem disponíveis, com suas dependências Windows/WinSCP/DPAPI: [guia legado](docs/legacy-windows.md). Instalar o Python não substitui essa skill automaticamente.
 
 ## Começar
+
+Você pode passar o link deste repositório a uma IA com acesso ao computador e pedir: **“Leia a documentação e me ajude a instalar e configurar o VHE Deploy para um site de teste, sem publicar arquivos ainda.”** O assistente orienta o processo; a senha é digitada no terminal, nunca no chat. A integração depende dos recursos e permissões do aplicativo utilizado.
 
 Requer Python 3.11+ e Git. Com pipx já instalado:
 
