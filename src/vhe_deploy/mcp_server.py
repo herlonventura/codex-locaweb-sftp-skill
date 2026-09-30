@@ -31,7 +31,12 @@ class DomainArgs(StrictModel):
     domain: str = Field(min_length=1, max_length=253)
 
 
-class DeployArgs(DomainArgs):
+class ScopeArgs(DomainArgs):
+    files: list[str] | None = Field(default=None, min_length=1,
+        description="Exact relative file paths, with /. Repeat the same list at deploy. Omit for full comparison.")
+
+
+class DeployArgs(ScopeArgs):
     preview_hash: str = Field(pattern=r"^[0-9a-fA-F]{64}$")
     preview_token: str = Field(pattern=r"^[A-Za-z0-9_-]{43}$", repr=False)
     confirm: bool = False
@@ -51,8 +56,8 @@ class OperationResult(StrictModel):
 TOOL_DEFINITIONS = {
     "list_sites": (EmptyArgs, "Lista os domínios cadastrados, sem senhas ou conexão.", True, True),
     "test_connection": (DomainArgs, "Testa autenticação e raiz do domínio cadastrado, sem envio.", True, True),
-    "compare_site": (DomainArgs, "Compara arquivos locais/remotos; não emite autorização de envio.", True, True),
-    "preview_deploy": (DomainArgs, "Calcula prévia e token de uso único válido por 5 minutos. Mostre a prévia ao usuário antes de enviar.", False, False),
+    "compare_site": (ScopeArgs, "Compara arquivos locais/remotos; não emite autorização de envio.", True, True),
+    "preview_deploy": (ScopeArgs, "Calcula prévia e token de uso único válido por 5 minutos. Mostre a prévia ao usuário antes de enviar.", False, False),
     "backup_site": (DomainArgs, "Baixa backup verificado para a pasta privada configurada; não altera o servidor.", False, False),
     "deploy_site": (DeployArgs, "Envia somente a prévia autorizada. Exige token, hash, publicação habilitada e confirm=true após autorização explícita do usuário. Não exclui arquivos remotos. Após sucesso, mantém os três últimos envios concluídos por domínio e remove as cópias locais dos mais antigos; preserva backups completos e falhas.", False, False),
     "register_site": (RegisterArgs, "Cadastra domínio novo, desativado e sem senha. Fingerprint/CA e habilitação de envio devem ser configuradas localmente.", False, False),

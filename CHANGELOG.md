@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0a3
+
+- Envio seletivo por lista exata: `--file` na CLI e `files` no MCP.
+- Previa, revalidacoes, backup e verificacao limitados ao lote selecionado, sem listar o restante do site.
+- Lista vinculada ao hash autorizado; expiracao, uso unico, conflitos e protecoes mantidos.
+- Comparacao completa preservada quando a lista e omitida.
+
 ## 0.1.0a2
 
 - Repositório renomeado para `vhe-deploy-sftp-ftps-mcp`; CLI continua `vhe-deploy` e MCP `vhe-deploy-mcp`.

@@ -6,7 +6,8 @@ from ..config.schema import Settings, Site, native_path
 from ..core.guards import normalize_domain
 from ..local_files import checked_path
 from .compare import Comparison, FileState, compare_inventories
-from .local import local_inventory
+from .local import local_inventory, read_local
+from .scope import normalize_files
 
 
 def file_evidence(entries):
@@ -20,20 +21,28 @@ class Preview:
     local: tuple[FileState, ...]
     remote: tuple[FileState, ...]
     comparison: Comparison
+    files: tuple[str, ...] | None = None
 
     def summary(self):
         return {"domain": self.domain, "preview_hash": self.digest, **asdict(self.comparison),
+                "scope": "files" if self.files is not None else "full", "files": self.files,
                 "would_upload": self.comparison.upload_paths, "would_delete": []}
 
 
-def make_preview(domain: str, site: Site, settings: Settings, backend) -> Preview:
+def make_preview(domain: str, site: Site, settings: Settings, backend, *, files=None) -> Preview:
     domain = normalize_domain(domain)
     root = checked_path(native_path(site.local_root))
-    local, remote = local_inventory(root), backend.inventory()
+    files = normalize_files(files)
+    if files is None:
+        local, remote = local_inventory(root), backend.inventory()
+    else:
+        local = tuple(read_local(root, path) for path in files)
+        compare_inventories(local, local)  # Reject case/Unicode/file-directory collisions.
+        remote = backend.selected_inventory(files)
     comparison = compare_inventories(local, remote, extra_blocked_patterns=site.blocked_paths)
-    evidence = {"version": 1, "domain": domain, "site": site.model_dump(mode="json"),
+    evidence = {"version": 2, "files": files, "domain": domain, "site": site.model_dump(mode="json"),
                 "settings": settings.model_dump(mode="json"), "resolved_local_root": str(root),
                 "local": file_evidence(local), "remote": file_evidence(remote)}
     digest = hashlib.sha256(json.dumps(evidence, sort_keys=True, separators=(",", ":"),
                                        ensure_ascii=True).encode("utf-8")).hexdigest()
-    return Preview(domain, digest, local, remote, comparison)
+    return Preview(domain, digest, local, remote, comparison, files)

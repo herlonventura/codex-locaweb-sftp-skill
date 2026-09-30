@@ -389,3 +389,85 @@ def test_local_reparse_points_are_rejected(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "lstat", fake)
     with pytest.raises(ValueError, match="reparse"):
         local_inventory(tmp_path)
+
+
+# Selective transfers exercise both real loopback SFTP and FTPS backends.
+def selected_execute(flow, files, preview=None):
+    backend, _, _, site, settings, state = flow
+    preview = preview or make_preview("example.com", site, settings, backend, files=files)
+    token = TokenStore(state).issue(preview)["preview_token"]
+    return deploy("example.com", site, settings, backend, state=state,
+                  preview_hash=preview.digest, preview_token=token, confirm=True, files=files)
+
+
+def test_selected_transfer_never_lists_or_reads_unselected_files(flow, monkeypatch):
+    seed(flow)
+    backend, server, local, site, settings, state = flow
+    files = ["index.html", "assets/sub/new.bin"]
+    original_read = backend._read
+    reads = []
+    def scoped_read(path, consume):
+        assert path in ("/site/index.html", "/site/assets/sub/new.bin")
+        reads.append(path)
+        return original_read(path, consume)
+    def forbidden(*args):
+        pytest.fail("Selective deployment must not enumerate directories")
+    monkeypatch.setattr(backend, "_read", scoped_read)
+    monkeypatch.setattr(backend, "_names", forbidden)
+    monkeypatch.setattr(backend, "inventory", forbidden)
+    preview = make_preview("example.com", site, settings, backend, files=files)
+    # Changes outside the approved scope do not invalidate or expand the batch.
+    (local / "unrelated.txt").write_bytes(b"not published")
+    (server.storage / "site/keep.txt").write_bytes(b"unrelated change")
+    result = selected_execute(flow, files, preview)
+    assert result["status"] == "success", result
+    assert result["data"]["scope"] == "files"
+    assert result["data"]["uploaded"] == sorted(files)
+    assert (server.storage / "site/keep.txt").read_bytes() == b"unrelated change"
+    assert not (server.storage / "site/unrelated.txt").exists()
+    backup = Path(result["data"]["run_directory"]) / "backup/files"
+    assert sorted(p.relative_to(backup).as_posix() for p in backup.rglob("*") if p.is_file()) == ["index.html"]
+    assert reads
+
+
+@pytest.mark.parametrize("files", [[], "index.html", ["../index.html"], ["/index.html"],
+                                   ["index.html", "index.html"], ["missing.txt"], ["assets"]])
+def test_invalid_selection_fails_closed(flow, files):
+    seed(flow)
+    backend, _, _, site, settings, _ = flow
+    with pytest.raises((ValueError, OSError)):
+        make_preview("example.com", site, settings, backend, files=files)
+
+
+def test_cannot_expand_approved_selection(flow):
+    seed(flow)
+    backend, _, _, site, settings, _ = flow
+    preview = make_preview("example.com", site, settings, backend, files=["index.html"])
+    result = selected_execute(flow, ["index.html", "assets/sub/new.bin"], preview)
+    assert result["status"] == "conflict"
+
+
+def test_selected_remote_change_invalidates_preview(flow):
+    seed(flow)
+    backend, server, _, site, settings, _ = flow
+    preview = make_preview("example.com", site, settings, backend, files=["index.html"])
+    (server.storage / "site/index.html").write_bytes(b"changed after approval")
+    result = selected_execute(flow, ["index.html"], preview)
+    assert result["status"] == "conflict"
+    assert (server.storage / "site/index.html").read_bytes() == b"changed after approval"
+
+
+def test_selected_protected_file_stays_blocked(flow):
+    backend, _, local, site, settings, _ = flow
+    (local / ".env").write_text("EXAMPLE=not-a-secret")
+    preview = make_preview("example.com", site, settings, backend, files=[".env"])
+    assert preview.comparison.has_blockers
+    assert preview.comparison.upload_paths == ()
+
+
+def test_selected_parent_must_be_a_directory(flow):
+    seed(flow)
+    backend, server, _, site, settings, _ = flow
+    (server.storage / "site/assets").write_bytes(b"not a directory")
+    with pytest.raises(ValueError):
+        make_preview("example.com", site, settings, backend, files=["assets/sub/new.bin"])

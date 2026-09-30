@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "vhe-deploy"
-version = "0.1.0a2"
+version = "0.1.0a3"
 description = "VHE Deploy: SFTP/FTPS CLI and MCP server with verified backups and preview tokens"
 keywords = ["sftp", "ftps", "mcp", "mcp-server", "deployment", "backup", "cli"]
 readme = "README.md"

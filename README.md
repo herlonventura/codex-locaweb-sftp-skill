@@ -133,3 +133,18 @@ A documentação da etapa 8 não executou migração de produção nem configuro
 Revise o diff antes de publicar: nunca inclua cadastros reais, credenciais, `.dpapi`, `.age`, identidades, recibos de token, exportações FileZilla, conteúdo de clientes, logs ou backups. `.gitignore` é uma ajuda, não garantia contra vazamentos.
 
 Licenciado sob a [MIT](LICENSE), copyright 2026 Herlon Ventura. Uso, modificação e redistribuição são permitidos conforme seus termos. As dependências mantêm suas próprias licenças.
+
+## Envio seletivo (lotes de arquivos)
+
+Para uma atualizacao pontual, informe os caminhos exatos relativos a raiz cadastrada:
+
+```shell
+vhe-deploy preview example.com --file index.html --file assets/site.css
+vhe-deploy deploy example.com --file index.html --file assets/site.css --preview-hash HASH --preview-token TOKEN --confirm
+```
+
+No MCP, passe `files: ["index.html", "assets/site.css"]` a `preview_deploy` e repita a mesma lista em `deploy_site`. `compare_site` tambem aceita `files`. A ordem nao importa. Lista vazia, duplicatas, pastas, curingas e caminhos fora da raiz sao rejeitados.
+
+O lote aparece em `scope`/`files` na previa e fica vinculado ao hash. Somente esses arquivos sao lidos, comparados e revalidados; apenas substituicoes recebem backup e somente arquivos novos/modificados sao enviados. Arquivos fora da lista nao sao auditados nem alterados. Mudancas no lote aprovado invalidam a previa. O token continua valido por cinco minutos e para um uso.
+
+Sem `--file`/`files`, permanece a comparacao completa para auditoria ou envio integral. O backup explicito continua completo. Para um lote, prefira sempre a lista exata; nao altere a raiz cadastrada para selecionar arquivos.

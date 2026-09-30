@@ -22,3 +22,10 @@ Aceite também um pedido claro em linguagem natural, como “envie os arquivos a
 Execute o comando com o wrapper `scripts/mcplocaweb.ps1`, resolvido a partir da pasta desta skill. Exemplo em PowerShell: `& '<caminho-da-skill>\scripts\mcplocaweb.ps1' '/mcplocaweb/exemplo.com.br comparar'`. O wrapper chama Windows PowerShell 5.1. A origem local vem somente do catálogo; não aceite um caminho alternativo na mensagem.
 
 Antes de publicar, confira o resultado da comparação ou da prévia. Se houver conflito de versão, arquivo sensível bloqueado ou falha de backup, não force o envio. Relate com precisão qualquer envio parcial e não o repita automaticamente. Não altere DNS, contas, banco de dados ou outros domínios sem um pedido próprio.
+
+
+## CLI/MCP VHE Deploy: lotes exatos
+
+Na CLI Python `vhe-deploy`, para atualizacoes pontuais, use `--file CAMINHO` repetido em `compare`, `preview` e `deploy`. No MCP use `files` em `compare_site`, `preview_deploy` e `deploy_site`. Repita a mesma lista de caminhos relativos na previa e no envio. O lote fica vinculado ao hash autorizado; nao altere a raiz cadastrada para selecionar arquivos.
+
+Sem lista, permanece a comparacao completa. Prefira o lote identificado no trabalho para envios pontuais; reserve a comparacao completa para auditorias ou atualizacoes integrais. Os bloqueios, backup, SHA-256 e token de cinco minutos continuam obrigatorios. Se a sessao MCP ainda nao expuser `files`, use a CLI atualizada ou reconecte o MCP.

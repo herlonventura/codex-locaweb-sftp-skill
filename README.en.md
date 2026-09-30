@@ -50,3 +50,14 @@ Configure your MCP client to launch `vhe-deploy-mcp` with its absolute path. [Cl
 [Full CLI reference](docs/cli.md) · [Distribution and validation](docs/distribution.md) · [Recovery](docs/recovery.md) · [Release guide](docs/releases.md)
 
 Licensed under MIT, copyright 2026 Herlon Ventura. Third-party dependencies retain their own licenses.
+
+## Selective file batches
+
+Use repeated `--file` options on `compare`, `preview`, and `deploy`, or a `files` array on MCP `compare_site`, `preview_deploy`, and `deploy_site`. Paths are exact relative files under the registered root; repeat the same list at deployment. Empty lists, duplicates, directories, globs, and traversal are rejected.
+
+```shell
+vhe-deploy preview example.com --file index.html --file assets/site.css
+vhe-deploy deploy example.com --file index.html --file assets/site.css --preview-hash HASH --preview-token TOKEN --confirm
+```
+
+The list is bound to the approved hash. Only selected files are read, compared, revalidated, backed up when replaced, and verified. Unselected files are neither audited nor modified. The five-minute, single-use receipt and all existing protections remain enforced. Omit the list for a full inventory; explicit backup remains full-site.

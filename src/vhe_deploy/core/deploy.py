@@ -61,13 +61,13 @@ def create_run(state, domain):
     return run
 
 
-def deploy(domain, site, settings, backend, *, state, preview_hash, preview_token, confirm=False):
+def deploy(domain, site, settings, backend, *, state, preview_hash, preview_token, confirm=False, files=None):
     publication_guard(site, settings, confirm)
     approved = normalize_sha256(preview_hash)
     state = state_directory(site, state)
     with operation_lock(state, site):
         lease = TokenStore(state).consume(domain, approved, preview_token)
-        current = make_preview(domain, site, settings, backend)
+        current = make_preview(domain, site, settings, backend, files=files)
         if current.comparison.has_blockers or current.digest != approved:
             return response("conflict", current.summary(), ["Prévia mudou ou contém arquivos bloqueados/conflitos; nenhum envio realizado."])
         if not current.comparison.upload_paths:
@@ -76,6 +76,7 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, preview_toke
         run = create_run(state, current.domain)
         journal = run / "deploy-result.json"
         data = {"domain": current.domain, "preview_hash": approved, "run_directory": str(run),
+                "scope": "files" if current.files is not None else "full", "files": current.files,
                 "planned": list(current.comparison.upload_paths), "uploaded": [], "directories_created": [],
                 "active": None, "phase": "preparing", "backup_complete": False, "remote_mutation_started": False}
         record = response("partial", data, ["Operação iniciada; conclusão ainda não registrada."])
@@ -92,7 +93,7 @@ def deploy(domain, site, settings, backend, *, state, preview_hash, preview_toke
             data["backup_complete"] = True
             data["phase"] = "revalidate"
             save_record(journal, record)
-            if make_preview(domain, site, settings, backend).digest != approved:
+            if make_preview(domain, site, settings, backend, files=files).digest != approved:
                 raise IntegrityError("Preview changed after backup.")
             lease.require_fresh()  # Slow comparison/backup must not extend authorization.
             for entry in candidates:

@@ -295,3 +295,20 @@ def test_setup_rejects_private_registration_inside_site(fresh_setup, tmp_path):
     result = runner.invoke(cli, args + ["setup"], input=answers())
     assert result.exit_code == 1
     assert not Path(args[1]).exists() and not settings.exists()
+
+
+def test_cli_explicit_files_preview_and_deploy(cli_environment):
+    runner, args, server, local, *_ = cli_environment
+    (local / "index.html").write_bytes(b"selected")
+    (local / "outside.txt").write_bytes(b"not selected")
+    selected = ["--file", "index.html"]
+    result = runner.invoke(cli, args + ["preview", "example.com"] + selected)
+    assert result.exit_code == 0, result.output
+    preview = json.loads(result.stdout)["data"]
+    assert preview["scope"] == "files"
+    assert preview["files"] == ["index.html"]
+    result = runner.invoke(cli, args + ["deploy", "example.com", "--preview-hash", preview["preview_hash"],
+        "--preview-token", preview["preview_token"], "--confirm"] + selected)
+    assert result.exit_code == 0, result.output
+    assert (server.storage / "site/index.html").read_bytes() == b"selected"
+    assert not (server.storage / "site/outside.txt").exists()

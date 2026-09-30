@@ -19,7 +19,8 @@ def data(result, status="success"):
 
 
 @pytest.mark.anyio
-async def test_official_stdio_client_discovers_and_executes_verified_deploy(site_runtime):
+@pytest.mark.parametrize("files", [None, ["index.html"]])
+async def test_official_stdio_client_discovers_and_executes_verified_deploy(site_runtime, files):
     runtime, server, local, site, environment = site_runtime
     environment.update(PYTHONPATH=str(Path("src").resolve()), PYTHONIOENCODING="utf-8")
     params = StdioServerParameters(command=sys.executable, args=["-m", "vhe_deploy.mcp_server",
@@ -34,12 +35,12 @@ async def test_official_stdio_client_discovers_and_executes_verified_deploy(site
         assert "preview_token" in tools["deploy_site"].input_schema["required"]
         assert data(await client.call_tool("list_sites"))["sites"][0]["domain"] == "example.com"
         data(await client.call_tool("test_connection", {"domain": "example.com"}))
-        compared = data(await client.call_tool("compare_site", {"domain": "example.com"}))
+        compared = data(await client.call_tool("compare_site", {"domain": "example.com", "files": files}))
         assert "preview_token" not in compared
         backup = data(await client.call_tool("backup_site", {"domain": "example.com"}))
         assert Path(backup["run_directory"], "backup/files/index.html").read_bytes() == b"old remote content"
-        preview = data(await client.call_tool("preview_deploy", {"domain": "example.com"}))
-        args = {"domain": "example.com", "preview_hash": preview["preview_hash"], "preview_token": preview["preview_token"], "confirm": True}
+        preview = data(await client.call_tool("preview_deploy", {"domain": "example.com", "files": files}))
+        args = {"domain": "example.com", "preview_hash": preview["preview_hash"], "preview_token": preview["preview_token"], "confirm": True, "files": files}
         deployed = data(await client.call_tool("deploy_site", args))
         assert deployed["uploaded"] == ["index.html"]
         assert (server.storage / "site/index.html").read_bytes() == b"new"

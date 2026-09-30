@@ -79,10 +79,10 @@ class Runtime:
             backend.check_connection()
         return response("success", {"domain": domain}, ["Conexão e raiz verificadas."])
 
-    def analyze(self, domain, *, issue_token=False):
+    def analyze(self, domain, *, issue_token=False, files=None):
         sites, domain, site, settings = self.site(domain)
         with open_site(sites, domain, settings=settings) as backend:
-            preview = make_preview(domain, site, settings, backend)
+            preview = make_preview(domain, site, settings, backend, files=files)
         data = preview.summary()
         if issue_token and not preview.comparison.has_blockers:
             data.update(TokenStore(state_directory(site, self.state)).issue(preview))
@@ -98,10 +98,10 @@ class Runtime:
         with open_site(sites, domain, settings=settings) as backend:
             return backup_site(domain, site, backend, state=self.state)
 
-    def deploy_site(self, domain, preview_hash, preview_token, confirm=False):
+    def deploy_site(self, domain, preview_hash, preview_token, confirm=False, files=None):
         sites, domain, site, settings = self.site(domain)
         publication_guard(site, settings, confirm)
         TokenStore(state_directory(site, self.state)).validate(domain, preview_hash, preview_token)
         with open_site(sites, domain, settings=settings) as backend:
             return deploy(domain, site, settings, backend, state=self.state, preview_hash=preview_hash,
-                          preview_token=preview_token, confirm=confirm)
+                          preview_token=preview_token, confirm=confirm, files=files)

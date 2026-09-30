@@ -237,18 +237,20 @@ def test_connection(runtime, domain):
 
 @cli.command("compare")
 @click.argument("domain")
+@click.option("--file", "files", multiple=True, help="Exact relative file path; repeat for each file. Omit for full scope.")
 @click.pass_obj
-def compare(runtime, domain):
+def compare(runtime, domain, files):
     """Compare conteúdo e datas, sem alterar o servidor."""
-    emit(runtime.analyze(domain))
+    emit(runtime.analyze(domain, files=list(files) if files else None))
 
 
 @cli.command("preview")
 @click.argument("domain")
+@click.option("--file", "files", multiple=True, help="Exact relative file path; repeat for each file. Omit for full scope.")
 @click.pass_obj
-def preview(runtime, domain):
+def preview(runtime, domain, files):
     """Calcule a prévia e emita token de uso único válido por cinco minutos."""
-    emit(runtime.analyze(domain, issue_token=True))
+    emit(runtime.analyze(domain, issue_token=True, files=list(files) if files else None))
 
 
 @cli.command("backup")
@@ -261,13 +263,14 @@ def backup(runtime, domain):
 
 @cli.command("deploy")
 @click.argument("domain")
+@click.option("--file", "files", multiple=True, help="Exact relative file path; repeat for each file. Omit for full scope.")
 @click.option("--preview-hash", required=True, help="SHA-256 retornado pela prévia revisada.")
 @click.option("--preview-token", required=True, help="Token emitido por preview; válido por cinco minutos, uso único.")
 @click.option("--confirm", is_flag=True)
 @click.pass_obj
-def deploy_command(runtime, domain, preview_hash, preview_token, confirm):
+def deploy_command(runtime, domain, preview_hash, preview_token, confirm, files):
     """Publique com backup/verificação; retenha três envios, sem exclusões remotas."""
-    emit(runtime.deploy_site(domain, preview_hash, preview_token, confirm))
+    emit(runtime.deploy_site(domain, preview_hash, preview_token, confirm, files=list(files) if files else None))
 
 
 @cli.command("migrate")

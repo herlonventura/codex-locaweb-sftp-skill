@@ -152,6 +152,24 @@ class Backend(ABC):
                 return len(chunk)
         return self.download(path, Sink())
 
+    def selected_inventory(self, paths) -> tuple[FileState, ...]:
+        """Read only named files, validating existing parents without listing directories."""
+        self.check_connection()
+        files = []
+        for path in paths:
+            validate_relative_path(path)
+            current = self.root.rstrip("/")
+            missing_parent = False
+            for part in path.split("/")[:-1]:
+                current += "/" + part
+                if self._stat(current) is None:
+                    missing_parent = True
+                    break
+                self._directory(current)
+            if not missing_parent and self.stat_path(path) is not None:
+                files.append(self.file_state(path))
+        return tuple(files)
+
     def inventory(self) -> tuple[FileState, ...]:
         self.check_connection()
         pending = [""]
